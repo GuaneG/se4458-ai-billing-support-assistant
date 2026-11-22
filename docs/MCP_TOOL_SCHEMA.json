@@ -1,0 +1,73 @@
+{
+  "tools": [
+    {
+      "name": "search_billing_documentation",
+      "description": "Find general mobile billing rules by keyword and return numbered guide excerpts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_billing_documentationArguments"
+      },
+      "outputSchema": {
+        "$defs": {
+          "Passage": {
+            "properties": {
+              "section": {
+                "title": "Section",
+                "type": "string"
+              },
+              "heading": {
+                "title": "Heading",
+                "type": "string"
+              },
+              "excerpt": {
+                "title": "Excerpt",
+                "type": "string"
+              }
+            },
+            "required": [
+              "section",
+              "heading",
+              "excerpt"
+            ],
+            "title": "Passage",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "passages": {
+            "items": {
+              "$ref": "#/$defs/Passage"
+            },
+            "title": "Passages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "document_id",
+          "passages"
+        ],
+        "title": "SearchResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

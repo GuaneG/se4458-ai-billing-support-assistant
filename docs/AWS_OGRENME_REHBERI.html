@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:,">
+<title>SE4458 — AWS öğrenme rehberi</title>
+<style>
+  :root { --paper:#edf2f8; --ink:#14273f; --quiet:#4a6177; --navy:#10233b; --deep:#081a2d; --line:#ccdae7; --cyan:#79ecd8; --violet:#d0bffa; --blue:#185a83; font: 16px/1.65 "Segoe UI", system-ui, sans-serif; color:var(--ink); background:var(--paper); }
+  * { box-sizing:border-box } body { margin:0 } a { color:#155981; text-underline-offset:.25em } a:hover { color:#084264 } button, select { font:inherit } button { cursor:pointer } button:disabled { cursor:default } :focus-visible { outline:3px solid #3978b5; outline-offset:3px } h1,h2,h3,p { margin:0 } p + p { margin-top:.75em }
+  code,pre,.mono { font-family:"Cascadia Code",Consolas,monospace } code { font-size:.89em; overflow-wrap:anywhere } pre { margin:.7rem 0 0; padding:.9rem 1rem; border-radius:8px; background:#e8eff6; color:#163d58; overflow:auto; font-size:.83rem; line-height:1.7 }
+  .wrap { width:min(1260px,calc(100% - 64px)); margin:auto } .top { color:#e8f2fa; background:var(--deep); border-bottom:1px solid #30445a } .top .wrap { display:flex; gap:1.75rem; align-items:center; justify-content:space-between; min-height:59px; flex-wrap:wrap } .brand { font-weight:750; letter-spacing:.02em } .brand span { color:var(--cyan); margin-right:.55rem } .top nav { display:flex; flex-wrap:wrap; gap:.25rem 1.25rem } .top a { color:#c4d6e6; text-decoration:none; font-size:.87rem } .top a:hover { color:white; text-decoration:underline }
+  .hero { background:var(--navy); padding:2.6rem 0 2.7rem; color:#f3f8fd } .hero h1 { font-size:clamp(2.15rem,5vw,4.25rem); letter-spacing:-.055em; line-height:1.04; font-weight:700; margin-bottom:.65rem } .hero > .wrap > p { color:#bed1e2; max-width:58ch } .simulator { margin-top:1.65rem; border:1px solid #3a536d; border-radius:18px; background:var(--deep); overflow:hidden }
+  .scenarios { display:flex; flex-wrap:wrap; gap:.42rem; padding:1rem 1.15rem; border-bottom:1px solid #344b62 } .scenarios button { border:1px solid #456079; border-radius:100px; padding:.45rem .9rem; background:transparent; color:#e0eaf4; font-size:.88rem; line-height:1.35 } .scenarios button[aria-pressed=true] { background:var(--cyan); border-color:var(--cyan); color:#09293b; font-weight:700 }
+  .sim-grid { display:grid; grid-template-columns:minmax(0,1fr) 290px } .map-col { min-width:0; background-color:#0c2035; background-image:radial-gradient(#33495d 1px,transparent 1px); background-size:18px 18px; padding:.45rem .45rem .7rem } .map-scroll { overflow-x:auto; scrollbar-color:#638098 #12273e } .map-scroll svg { display:block; width:100%; min-width:655px; height:auto } .map-hint { display:none; font-size:.8rem; color:#c5d7e8; padding:0 .65rem .35rem }
+  .vpc-bound { fill:#102940; stroke:#45617a; stroke-width:1.2; stroke-dasharray:5 5 } .host-bound { fill:#143048; stroke:#547896; stroke-width:1.2 } .boundary-label { fill:#adc6dc; font-size:10px; letter-spacing:1.2px } .node rect { fill:#1a3652; stroke:#62809a; stroke-width:1.15 } .node text { fill:#f4f8fe; font-size:15px; font-weight:650 } .node .sub { fill:#bcd0e3; font-size:11px; font-weight:450 } .node.active rect { fill:#164d57; stroke:var(--cyan); stroke-width:2 } .node.active .sub { fill:#def6f4 }
+  .wire { fill:none; stroke:#7891aa; stroke-width:1.6; marker-end:url(#arrow-idle) } .wire.meta { stroke-dasharray:5 4 } .wire.active { stroke:var(--cyan); stroke-width:2.9; marker-end:url(#arrow-active) } .wire.reply { stroke:var(--violet); stroke-width:2.9; marker-end:none; marker-start:url(#arrow-reply) } .wire-label { fill:#c6d8e8; font-size:10.4px; paint-order:stroke; stroke:#10273e; stroke-width:4px; stroke-linejoin:round }
+  .legend { display:flex; flex-wrap:wrap; gap:.15rem 1rem; padding:0 .75rem; color:#c5d8e9; font-size:.76rem } .legend b { display:inline-block; width:13px; height:2px; vertical-align:middle; background:var(--cyan); margin-right:.35rem } .legend .return { background:var(--violet) } .legend .discovery { border-bottom:2px dashed #9fb5c9; background:none }
+  .step { border-left:1px solid #344b62; padding:1.1rem; display:flex; flex-direction:column; justify-content:space-between; gap:1.2rem } .step-index { color:var(--cyan); font-size:.8rem; font-weight:650 } .step h2 { color:white; line-height:1.21; font-size:1.35rem; margin:.5rem 0 } .step p { font-size:.93rem; color:#c5d6e7 } .step code { display:block; margin-top:.75rem; color:#d9efe7; font-size:.77rem; border:1px solid #3a556f; border-radius:7px; background:#142a41; padding:.55rem .65rem } .step-controls { display:grid; grid-template-columns:1fr 1fr; gap:.5rem } .step-controls button { padding:.43rem; border:1px solid #6a859d; border-radius:7px; background:#15314b; color:#f1f6fb; font-size:.87rem } .step-controls button:last-child { background:#d4e7f8; color:#163452; border-color:#d4e7f8; font-weight:650 } .step-controls button:disabled { opacity:.48 }
+  .docs { display:grid; grid-template-columns:195px minmax(0,1fr); gap:3rem; padding:3rem 0 4rem } .outline { position:sticky; top:1.4rem; align-self:start; display:grid; gap:.12rem; border-left:2px solid #b8ccde; padding-left:1.05rem } .outline strong { font-size:.9rem; margin-bottom:.3rem } .outline a { text-decoration:none; font-size:.9rem; padding:.3rem 0 } .outline a:hover { text-decoration:underline } .section { scroll-margin-top:1.2rem; margin-bottom:3.25rem } .section h2 { letter-spacing:-.045em; font-size:clamp(1.7rem,3.9vw,2.55rem); line-height:1.12; margin-bottom:.65rem } .section > p { margin-bottom:1rem; max-width:77ch; color:var(--quiet) } h3 { font-size:1.12rem; letter-spacing:-.015em; line-height:1.35; margin-bottom:.35rem }
+  .surface { background:#f8fbff; border:1px solid var(--line); border-radius:12px; overflow:hidden } .surface-pad { padding:1.05rem 1.2rem } .pair { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0 } .pair p { font-size:.92rem } .explainer { border-left:3px solid #4d91ba; background:#deedf7; border-radius:0 8px 8px 0; padding:.75rem 1rem; margin:.9rem 0 1rem; font-size:.93rem } .list-rows { padding:0; margin:0; list-style:none } .list-rows > li { display:grid; grid-template-columns:minmax(125px, .68fr) minmax(0,2fr); gap:.85rem; padding:.85rem 1.1rem; border-top:1px solid var(--line) } .list-rows > li:first-child { border-top:0 } .list-rows small { display:block; color:var(--quiet); font-size:.82rem; margin-top:.15rem }
+  .chapter + .chapter { margin-top:1.2rem } .table-wrap { overflow:auto } table { width:100%; border-collapse:collapse; font-size:.89rem; text-align:left } th,td { vertical-align:top; padding:.58rem .7rem; border-bottom:1px solid #d4e0eb } th { background:#dce9f4; font-size:.84rem; color:#213e55 } tr:last-child td { border-bottom:0 } td:first-child { color:#125475; min-width:4.5rem } td:nth-child(2) { min-width:12rem } table code { overflow-wrap:anywhere } .endpoint-table td:last-child { min-width:11rem }
+  .gatebox { margin:.95rem 0 1.1rem; padding:1.05rem 1.2rem; display:grid; grid-template-columns:1fr 1.35fr; gap:1.05rem } .gatebox label { display:block; font-weight:700; margin-bottom:.35rem } .gatebox select { width:100%; padding:.48rem .55rem; border:1px solid #90a9bd; border-radius:7px; background:#fff; color:var(--ink); font-size:.9rem } .gate-result { border-left:3px solid #3a8b7c; padding-left:.85rem } .gate-result[data-status=blocked] { border-color:#b85a30 } .gate-result h3 { font-family:"Cascadia Code",Consolas,monospace; font-size:1rem }
+  details { border-top:1px solid var(--line); padding:.65rem 1rem } details:first-child { border-top:0 } summary { cursor:pointer; font-weight:650; color:#1c425e } details p { font-size:.92rem; margin:.6rem 0 .25rem } .timeline { margin:.9rem 0 0; padding:0; list-style:none; counter-reset:stage } .timeline li { counter-increment:stage; position:relative; padding:0 0 .9rem 2.9rem; margin-left:.87rem; border-left:1px solid #a8bdcf } .timeline li::before { content:counter(stage); display:grid; place-items:center; position:absolute; inset:0 auto auto -.88rem; width:1.75rem; height:1.75rem; border-radius:50%; background:#d9e9f6; border:1px solid #9dbbd3; color:#214769; font-weight:700; font-size:.8rem } .timeline li:last-child { border-color:transparent; padding-bottom:0 } .timeline h3 { padding-top:.1rem; margin-bottom:.25rem } .timeline p { color:var(--quiet); font-size:.94rem } .source-links { display:flex; flex-wrap:wrap; gap:.25rem 1.3rem; padding-left:0; list-style:none }
+  @media (max-width:1050px) { .sim-grid { grid-template-columns:minmax(0,1fr) } .step { border-left:0; border-top:1px solid #344b62; display:grid; grid-template-columns:minmax(0,1fr) 215px; align-items:end } }
+  @media (max-width:770px) { .wrap { width:calc(100% - 32px) } .top .wrap { gap:.15rem; padding:.55rem 0 } .top nav { gap:0 1rem } .hero { padding:1.65rem 0 1.55rem } .docs { display:block; padding:1.65rem 0 2.2rem } .outline { position:static; display:flex; flex-wrap:wrap; gap:.08rem 1rem; margin-bottom:1.75rem } .outline strong { width:100% } .map-hint { display:block } .section { margin-bottom:2.5rem } }
+  @media (max-width:490px) { .step,.pair,.gatebox { display:grid; grid-template-columns:1fr } .step { gap:.85rem } .scenarios { padding:.75rem; gap:.4rem } .scenarios button { padding:.42rem .6rem; min-height:39px } .list-rows > li { grid-template-columns:1fr; gap:.25rem } pre { font-size:.74rem } .timeline li { padding-left:1.75rem } }
+  @media (max-width:770px) { .map-scroll svg { min-width:900px } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><span>SE4458</span> Fatura Asistanı</div>
+  <nav aria-label="Bölümler"><a href="#akis">Mimari</a><a href="#endpointler">Endpoint’ler</a><a href="#ag">Trafik kuralları</a><a href="#ec2">EC2 ve kod</a><a href="#kurulum">Kurulum</a><a href="#teslim">Teslim</a></nav>
+</div></header>
+<main>
+<section class="hero" id="akis" aria-labelledby="main-title"><div class="wrap">
+  <h1 id="main-title">Bir mesajın AWS yolculuğu</h1>
+  <p>Bir Chat senaryosu seç ve adım adım ilerle. Harita her yeni isteği ve cevabın hangi yoldan döndüğünü gösterir.</p>
+  <div class="simulator">
+    <div class="scenarios" role="group" aria-label="Chat senaryoları">
+      <button type="button" data-scenario="rest" aria-pressed="true">Yalnız Billing REST</button>
+      <button type="button" data-scenario="mcp" aria-pressed="false">Yalnız MCP</button>
+      <button type="button" data-scenario="both" aria-pressed="false">REST + MCP</button>
+      <button type="button" data-scenario="hello" aria-pressed="false">Selam</button>
+    </div>
+    <div class="sim-grid">
+      <div class="map-col">
+        <p class="map-hint">Haritanın tamamı için yatay kaydır.</p>
+        <div class="map-scroll" tabindex="0" role="region" aria-label="AWS mimari haritası">
+        <svg viewBox="0 0 980 546" role="img" aria-labelledby="map-title map-description">
+          <title id="map-title">Fatura Asistanı’nın AWS mimarisi</title>
+          <desc id="map-description">Tarayıcı public API Gateway’e, Gateway VPC Link üzerinden EC2’deki Chat veya Billing servisine bağlanır. Cloud Map hedef IP ve portu verir. Chat, Billing için aynı Gateway’e, MCP için loopback’e, model için OpenAI’ye bağlanır. Billing PostgreSQL’e bağlanır.</desc>
+          <defs>
+            <marker id="arrow-idle" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0 0 L7 3.5 L0 7Z" fill="#7891aa"/></marker>
+            <marker id="arrow-active" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0 0 L7 3.5 L0 7Z" fill="#79ecd8"/></marker>
+            <marker id="arrow-reply" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0 0 L7 3.5 L0 7Z" fill="#d0bffa"/></marker>
+          </defs>
+          <rect class="vpc-bound" x="443" y="100" width="515" height="425" rx="16"/>
+          <text class="boundary-label" x="460" y="125">VPC / STOCKHOLM</text>
+          <rect class="host-bound" x="701" y="123" width="244" height="385" rx="13"/>
+          <text class="boundary-label" x="719" y="145">EC2 / LAUNCH-WIZARD-2</text>
+          <path class="wire" data-wire="public" d="M157 184 H213"/>
+          <path class="wire" data-wire="link" d="M392 184 H493"/>
+          <path class="wire" data-wire="chat" d="M647 184 H730"/>
+          <path class="wire" data-wire="billing" d="M647 211 H672 V271 H730"/>
+          <path class="wire meta" data-wire="discovery" d="M300 245 V324"/>
+          <path class="wire" data-wire="rest" d="M730 167 H692 V76 H297 V154"/>
+          <path class="wire" data-wire="openai" d="M904 153 V73"/>
+          <path class="wire" data-wire="mcp" d="M750 219 H713 V361 H730"/>
+          <path class="wire" data-wire="db" d="M907 272 H934 V455 H920"/>
+          <text class="wire-label" x="166" y="173">HTTPS</text>
+          <text class="wire-label" x="403" y="172">VPC Link V2</text>
+          <text class="wire-label" x="655" y="174">TCP 8002</text>
+          <text class="wire-label" x="652" y="258">TCP 8000</text>
+          <text class="wire-label" x="310" y="284">DiscoverInstances</text>
+          <text class="wire-label" x="443" y="66">Agent → Gateway / HTTPS 443</text>
+          <text class="wire-label" x="833" y="113">HTTPS 443</text>
+          <g class="node" data-node="browser"><rect x="28" y="154" width="129" height="66" rx="9"/><text x="42" y="182">Tarayıcı</text><text class="sub" x="42" y="201">Chat UI</text></g>
+          <g class="node" data-node="gateway"><rect x="214" y="154" width="178" height="91" rx="9"/><text x="230" y="182">API Gateway</text><text class="sub" x="230" y="201">HTTP API · public HTTPS</text><text class="sub" x="230" y="221">Route → integration</text></g>
+          <g class="node" data-node="cloud"><rect x="214" y="325" width="178" height="85" rx="9"/><text x="230" y="353">AWS Cloud Map</text><text class="sub" x="230" y="373">chat → private IP · 8002</text><text class="sub" x="230" y="391">billing → private IP · 8000</text></g>
+          <g class="node" data-node="link"><rect x="494" y="154" width="153" height="86" rx="9"/><text x="507" y="181">VPC Link ENI</text><text class="sub" x="507" y="200">se4458-link</text><text class="sub" x="507" y="220">SG: billing-link</text></g>
+          <g class="node" data-node="openai"><rect x="730" y="15" width="190" height="58" rx="9"/><text x="747" y="40">OpenAI Responses API</text><text class="sub" x="747" y="58">Model seçimi ve yanıt</text></g>
+          <g class="node" data-node="chat"><rect x="730" y="153" width="190" height="66" rx="9"/><text x="746" y="182">Chat API + Agent</text><text class="sub" x="746" y="201">HTTP · 8002</text></g>
+          <g class="node" data-node="billing"><rect x="730" y="241" width="190" height="61" rx="9"/><text x="746" y="268">Billing REST API</text><text class="sub" x="746" y="287">HTTP · 8000</text></g>
+          <g class="node" data-node="mcp"><rect x="730" y="330" width="190" height="63" rx="9"/><text x="746" y="359">MCP Server</text><text class="sub" x="746" y="378">127.0.0.1:8001/mcp</text></g>
+          <g class="node" data-node="db"><rect x="730" y="425" width="190" height="63" rx="9"/><text x="746" y="453">PostgreSQL</text><text class="sub" x="746" y="473">127.0.0.1:55458 → Docker</text></g>
+        </svg>
+        </div>
+        <div class="legend"><span><b></b>İstek</span><span><b class="return"></b>Cevap</span><span><b class="discovery"></b>Hedef keşfi</span></div>
+      </div>
+      <div class="step">
+        <div id="step-content" aria-live="polite" aria-atomic="true">
+          <div class="step-index" id="step-index"></div><h2 id="step-title">Chat isteği</h2><p id="step-description"></p><code id="step-packet"></code>
+        </div>
+        <div class="step-controls"><button id="prev" type="button">Önceki</button><button id="next" type="button">Sonraki</button></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<div class="wrap docs">
+<aside class="outline" aria-label="İçindekiler">
+  <strong>Bu rehberde</strong>
+  <a href="#endpointler">Gateway öncesi endpoint’ler</a><a href="#ag">Trafik nerede durur?</a><a href="#ec2">EC2’deki kod ve servisler</a><a href="#anahtar">API key ve JWT</a><a href="#kurulum">Kurulum sırası</a><a href="#teslim">Teslim ve canlı kanıt</a>
+</aside>
+<div>
+<section class="section" id="endpointler">
+  <h2>Gateway’den önce hangi endpoint’ler vardı?</h2>
+  <p>Chat ve Billing zaten FastAPI uygulamalarıydı. İlk yerel demoda <code>agent/chat_demo.py</code> bileşenleri tek Python sürecinde bir araya getiriyordu. EC2’de bunları ayrı servisler olarak ayağa kaldırıp Billing’i önce host içinden <code>curl</code> ile test ettik. Gateway route’u, gelen <strong>HTTP method + path</strong> ikilisine bir hedef bağlar. Integration da o hedefe hangi VPC Link ve Cloud Map kaydı üzerinden gidileceğini söyler.</p>
+  <div class="chapter"><h3>Chat API · <code>:8002</code></h3><div class="surface table-wrap"><table class="endpoint-table">
+    <thead><tr><th scope="col">Method</th><th scope="col">Uygulamadaki path</th><th scope="col">Neden var?</th><th scope="col">Gateway</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/</code></td><td>Login ve Chat HTML’ini sunar.</td><td>Chat integration</td></tr>
+      <tr><td>GET</td><td><code>/chat-assets/&lt;dosya&gt;</code></td><td>Arayüzün CSS ve JavaScript dosyalarını sunar.</td><td><code>ANY /chat-assets/{proxy+}</code> son konsol görüntüsünde. Tarayıcı dosyaları <code>GET</code> ile alır.</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/auth/login</code></td><td>Abone veya operatör girişini doğrular ve uygulama JWT’si verir.</td><td>Chat integration</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/chat</code></td><td>Abone JWT’siyle soruyu Agent’a verir. Yanıtı ve tool trace’i döndürür.</td><td>Chat integration</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/chat/payments/confirm</code></td><td>Taslak sahibinin açık onayından sonra Billing’e simüle ödemeyi iletir.</td><td>Chat integration</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/operator/operations/prepare</code></td><td>Operatör için kullanım veya hesaplama taslağı oluşturur.</td><td>Chat integration</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/operator/operations/confirm</code></td><td>Onaylanan operatör işlemini Billing’e iletir.</td><td>Chat integration</td></tr>
+    </tbody>
+  </table></div></div>
+  <div class="chapter"><h3>Billing REST API · <code>:8000</code></h3>
+    <p class="explainer">Aşağıda <code>{bill}</code>, <code>/api/v1/subscribers/{subscriber_no}/bills/{year}/{month}</code> yolunu gösterir. Konsola route eklerken tam path’i kullanırız.</p>
+    <div class="surface table-wrap"><table class="endpoint-table">
+    <thead><tr><th scope="col">Method</th><th scope="col">Uygulamadaki path</th><th scope="col">Neden var?</th><th scope="col">Gateway</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/</code></td><td>Billing uygulamasını EC2 içinden tanılamak için.</td><td>Gateway’de <code>GET /</code> Chat’e gider.</td></tr>
+      <tr><td>GET</td><td><code>{bill}</code></td><td>Toplamı, ödeneni, kalan borcu ve durumu okur. Public erişim yalnızca işaretlenmiş sentetik özetlere açıktır.</td><td>Billing integration</td></tr>
+      <tr><td>GET</td><td><code>{bill}/details</code></td><td>Fatura sahibine kullanım ve ücret kalemlerini sayfalı verir.</td><td>Billing integration</td></tr>
+      <tr><td>POST</td><td><code>{bill}/payments</code></td><td>Fatura sahibinin simüle ödemesini ve kalan bakiyeyi kaydeder.</td><td>Billing integration</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/usage</code></td><td>Operatör bir kullanım olayı ekler. Telefon +10 dakika veya internet +1 MB.</td><td>Billing integration</td></tr>
+      <tr><td>POST</td><td><code>/api/v1/bills/calculate</code></td><td>Operatör, seçilen dönemin güncel kullanımından faturayı hesaplayıp kaydeder.</td><td>Billing integration</td></tr>
+    </tbody>
+  </table></div></div>
+  <p class="explainer">FastAPI’nin geliştirme dokümanları ve OpenAPI endpoint’leri de uygulama düzeyinde bulunur. Gateway’e eklediğimiz route’lar yukarıdaki tablolardadır. MCP araması ayrı bir HTTP taşıması kullanır ve EC2’ye içeriden <code>127.0.0.1:8001/mcp</code> üzerinden ulaşır.</p>
+</section>
+
+<section class="section" id="ag">
+  <h2>Trafiği kim kontrol eder?</h2>
+  <p>Bir istek ağ bağlantısı kurabilir ve uygulama yetkisi olmadığı için yine de reddedilebilir. Aşağıdan bir örnek seçip hangi katmanın karar verdiğini gör.</p>
+  <div class="surface gatebox">
+    <div><label for="traffic">Örnek bağlantı</label><select id="traffic">
+      <option value="route">Yanlış Gateway path’i</option>
+      <option value="nojwt">JWT’siz fatura detayı</option>
+      <option value="forbidden">Abone JWT’siyle kullanım ekleme</option>
+      <option value="direct">İnternetten EC2:8000</option>
+      <option value="gateway">VPC Link → EC2:8002</option>
+      <option value="ssh">Başka bir IP’den SSH</option>
+      <option value="llm">OpenAI HTTPS cevabı</option>
+      <option value="loopback">Agent → MCP / loopback</option>
+      <option value="timeout">Backend zaman aşımı</option>
+    </select></div>
+    <div class="gate-result" id="gate-result" aria-live="polite"><h3 id="gate-title"></h3><p id="gate-text"></p></div>
+  </div>
+  <div class="surface"><ul class="list-rows">
+    <li><strong>Public API Gateway</strong><div>HTTPS girişini karşılar ve method/path eşleştirir. <code>$default</code> stage, URL’yi kökten açar. <code>$default</code> adlı bir catch-all route ayrı bir ayardır. Bu kurulumda korumalı endpoint’lerin JWT kontrolünü FastAPI yapar. <small>Stage throttling ve access logs ayrı ayarlardır. Konuşmada bunların canlı durumu doğrulanmadı.</small></div></li>
+    <li><strong><code>billing-link</code></strong><div>VPC Link’in ENI’lerine bağlı. Yeni outbound TCP bağlantısı için hedef <code>launch-wizard-2</code> grubuna bağlı olmalı ve hedef port <code>8000</code> veya <code>8002</code> olmalı. Yeni inbound bağlantı kuralı yok. <small>Tarayıcıdan Gateway’e yapılan public HTTPS çağrısı bu ENI’de başlamaz. Bu grup, Gateway’in EC2’ye açtığı bağlantıyı kontrol eder.</small></div></li>
+    <li><strong><code>launch-wizard-2</code></strong><div>EC2’ye bağlı. Inbound TCP <code>8000/8002</code> için kaynak <code>billing-link</code>, SSH <code>22</code> için kendi public IPv4 <code>/32</code> kuralı var. Konuştuğumuz yapıdaki outbound <code>All traffic</code>, EC2’den public HTTPS bağlantılarına izin verir.</div></li>
+    <li><strong>Loopback</strong><div>MCP <code>127.0.0.1:8001</code>, PostgreSQL host portu <code>127.0.0.1:55458</code>. Bu trafik EC2 içinde kalır. Gateway’de bu servislere ayrılmış route bulunmaz.</div></li>
+  </ul></div>
+  <div class="pair">
+    <div class="surface surface-pad"><h3>Ayrı Security Group ne kazandırdı?</h3><p>Bir VPC Link için kullanılacak grubun adı serbest. Bu grup, <strong>yalnız gerekli hedef ve portlara</strong> izin vermeyi ve EC2 inbound kuralında VPC Link’i kaynak olarak tanımayı kolaylaştırır. Mevcut <code>billing-link</code> kuralı kaldırılır ve başka bir izin tanımlanmazsa Gateway’in private bağlantısı kurulamaz.</p></div>
+    <div class="surface surface-pad"><h3>Cevap için neden ayrıca port açmadık?</h3><p>Security Group <strong>stateful</strong>. Örneğin EC2 geçici bir kaynak portundan OpenAI’nin <code>443</code> portuna bağlanınca cevap o kurulu bağlantının parçasıdır ve geri geçer. Aynı mantıkla Billing cevabı VPC Link’e döner. İki durumda da yeni bir inbound bağlantı başlatılmaz.</p></div>
+  </div>
+</section>
+
+<section class="section" id="ec2">
+  <h2>EC2’de hangi kod çalışıyor?</h2>
+  <p>Windows projesinden EC2’ye bir kaynak arşivi taşıdık ve <code>/home/ubuntu/se4458</code> altında açtık. Python uygulamaları <code>.venv/</code> içindeki interpreter ile çalışıyor. PostgreSQL Docker’da ayrı bir süreç.</p>
+  <div class="surface table-wrap"><table>
+    <thead><tr><th scope="col">Süreç</th><th scope="col">Koddaki giriş</th><th scope="col">Dinlediği adres</th></tr></thead>
+    <tbody>
+      <tr><td><code>se4458@chat</code></td><td><code>agent/chat_api.py</code> · <code>agent.chat_api:app</code></td><td><code>0.0.0.0:8002</code></td></tr>
+      <tr><td><code>se4458@billing</code></td><td><code>billing_api/main.py</code> · <code>billing_api.main:app</code></td><td><code>0.0.0.0:8000</code></td></tr>
+      <tr><td><code>se4458@mcp</code></td><td><code>mcp_server/server.py</code> · MCP uygulaması</td><td><code>127.0.0.1:8001/mcp</code></td></tr>
+      <tr><td><code>postgres</code></td><td><code>compose.yaml</code> ve <code>compose.aws.yaml</code></td><td><code>127.0.0.1:55458</code> → container <code>5432</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="surface" style="margin-top:1rem">
+    <details><summary>Proje klasörleri bir arada</summary><pre>/home/ubuntu/se4458/
+├─ agent/          Chat API, Agent, Billing istemcisi, web UI
+├─ billing_api/    REST route’ları, fiyatlandırma ve DB erişimi
+├─ mcp_server/     MCP tool’u ve rehber araması
+├─ .venv/          Python interpreter ve bağımlılıklar
+├─ requirements.txt
+├─ compose.yaml
+└─ compose.aws.yaml
+
+/home/ubuntu/.config/se4458/
+├─ billing.env
+├─ chat.env
+└─ mcp.env</pre></details>
+    <details><summary>Chat, Agent ve tool nesneleri</summary><p><code>agent/web/</code> tarayıcıdaki arayüz. <code>agent/chat_api.py</code> login, JWT ve Chat HTTP handler’larını çalıştırır. <code>agent/billing_agent.py</code> modele tool şemalarını sunar, modelin <code>function_call</code> çıktısını çalıştırır ve aynı <code>call_id</code> ile <code>function_call_output</code> gönderir. <code>agent/billing_client.py</code> REST isteklerinin path’ini ve yetki header’ını oluşturur. <code>agent/operator_api.py</code> operatör onay akışını yürütür.</p></details>
+    <details><summary>Billing, PostgreSQL ve işlemler</summary><p><code>billing_api/routers/bills.py</code> versioned REST route’larını tanımlar. <code>billing_api/db/bills.py</code> aylık kullanım, hesaplanmış fatura ve ödeme kayıtlarını okur/yazar. <code>billing_api/services/pricing.py</code> blok fiyatlandırmasını hesaplar. Operatör hesabı PostgreSQL’e hash ile yazılır. Docker named volume veriyi tutar.</p></details>
+    <details><summary>MCP ve rehber araması</summary><p><code>mcp_server/server.py</code>, <code>search_billing_documentation</code> tool’unu ve Streamable HTTP endpoint’ini açar. Rehber indeksi başlık ve bölüm metinlerini eşleştirir. Model, tool’un <code>query</code> değerini üretir. SDK oturumu başlatırken HTTP mesajı gönderebilir. <code>tools/call</code> yalnız arama tool’u seçilince gider.</p></details>
+    <details><summary>Uygulama kodu ve AWS konfigürasyon dosyaları</summary><p><code>/etc/systemd/system/se4458@.service</code> ortak şablon. <code>se4458@chat</code> için <code>%i</code> değeri <code>chat</code> olur ve <code>/home/ubuntu/.config/se4458/chat.env</code> yüklenir. Billing ve MCP kendi dosyalarını okur. Tek Chat worker onay taslaklarını bellekte tutar. Restart sonrasında bekleyen taslak yeniden hazırlanır.</p></details>
+    <details><summary>Servisleri ve dinleyen portları terminalde görmek</summary><pre>systemctl is-active se4458@chat se4458@billing se4458@mcp
+ss -ltn
+sudo journalctl -u se4458@chat -u se4458@billing -u se4458@mcp -n 80 --no-pager</pre><p><code>is-active</code> süreçleri kontrol eder. <code>ss -ltn</code> dinleyen TCP portlarını sayısal gösterir. <code>journalctl</code> seçilen servislerin son loglarını getirir. Billing ve Chat’i <code>0.0.0.0</code> üzerinde, MCP ve PostgreSQL’i <code>127.0.0.1</code> üzerinde görmeyi bekleriz.</p></details>
+  </div>
+</section>
+
+<section class="section" id="anahtar">
+  <h2>API key ve JWT hangi istekte kullanılıyor?</h2>
+  <div class="pair">
+    <div class="surface surface-pad"><h3>OpenAI API key</h3><p>Chat servisi <code>chat.env</code> üzerinden <code>OPENAI_API_KEY</code> değerini okur. OpenAI SDK bu değeri <code>api.openai.com/v1</code> tarafına yaptığı HTTPS çağrısında kullanır. Model proje kodunda <code>gpt-6-luna</code>. Harcama OpenAI projesine yazılır. Key, tarayıcıya sunulan JS dosyasına dahil edilmez.</p></div>
+    <div class="surface surface-pad"><h3>Uygulama JWT’si</h3><p>Login başarılı olunca Chat, abone kimliği veya operatör yetkisi için kendi JWT’sini üretir. Tarayıcı bunu <code>Authorization: Bearer …</code> olarak Chat’e yollar. Agent, korumalı Billing isteğine aynı oturumun token’ını koyar. Chat ve Billing, ortak <code>BILLING_JWT_SECRET</code> ile token’ı doğrular.</p></div>
+  </div>
+  <div class="surface"><ul class="list-rows">
+    <li><strong><code>BILLING_API_BASE_URL</code></strong><div>Chat’in Billing isteklerinin başladığı adres. Kodda bu değer verilmezse <code>http://127.0.0.1:8000</code> fallback’i var. EC2’de değeri Gateway Invoke URL’sine çevirdik ve <code>se4458@chat</code> servisini restart ettik. Böylece Agent’ın <code>query_bill</code>, <code>query_bill_details</code> ve ilgili yazma istekleri Gateway’den geçiyor.</div></li>
+    <li><strong><code>MCP_URL</code></strong><div>Chat’in MCP’ye ulaşacağı yerel adres. Model MCP tool’unu seçince Agent <code>127.0.0.1:8001/mcp</code> üzerinden çağırır.</div></li>
+    <li><strong><code>BILLING_DATABASE_URL</code></strong><div>PostgreSQL bağlantı ayarı. Billing işlem kayıtlarını buradan okur/yazar. Chat de operatör hesabı gibi kendi veritabanı erişimlerinde kullanır.</div></li>
+  </ul></div>
+  <p class="explainer">Bir Chat isteğinin içindeki model çağrıları aynı tool sonuçlarını birlikte taşır. Yeni bir Chat mesajında Agent yeni bir <code>history</code> listesi açar. Bu yüzden “Emin misin?” gibi bir soru tek başına önceki faturayı bulamayabilir.</p>
+</section>
+
+<section class="section" id="kurulum">
+  <h2>Bugün neyi neden yaptık?</h2>
+  <ol class="timeline">
+    <li><h3>EC2, SSH ve disk</h3><p>Stockholm’de Ubuntu 26.04 ARM64 <code>t4g.small</code> başlattık. SSH kaynağını kendi IP’mize daralttık ve Windows anahtar izinlerini düzelttik. 16 GiB şifreli <code>gp3</code> EBS, uygulama dosyaları ve Docker verisi için disk sağladı. Uygulama sunucusu olmadan Chat ve Billing’in çalışacağı hedef olmazdı.</p></li>
+    <li><h3>Kaynak arşivi, Python ve Docker</h3><p><code>scp</code> kaynak arşivini EC2’ye taşıdı; <code>tar</code> proje klasörüne açtı. Python bağımlılıklarını <code>.venv</code> ile ayırdık. Docker Compose, PostgreSQL’i ve kalıcı volume’ünü oluşturdu. <code>psql</code> ile demo Ekim faturasını gördük.</p></li>
+    <li><h3>Servis ayarları ve systemd</h3><p>DB, JWT, demo parola ve OpenAI key ayarları EC2’de ilgili environment dosyalarına girdi. Gizli değerleri <code>600</code> izinli yapılandırma dosyalarından okuyoruz. Ortak systemd şablonu üç Python uygulamasını ayrı portlarda ayakta tutar; SSH oturumu kapansa da çalışırlar.</p></li>
+    <li><h3>Cloud Map ve Security Groups</h3><p>Cloud Map’te <code>se4458</code> HTTP namespace’ine <code>chat</code> ve <code>billing</code> için aynı private IP’yi iki farklı portla kaydettik. Cloud Map hedefi bildirir. <code>billing-link</code> ve <code>launch-wizard-2</code> kuralları bağlantının VPC’de gerçekten kurulmasına izin verir.</p></li>
+    <li><h3>VPC Link ve subnet seçimi</h3><p>API Gateway’in VPC içinde ağ arayüzü açabilmesi için <code>se4458-link</code> oluşturduk. İki subnet seçimi link arayüzlerini farklı AZ’lere yayar. Uygulamanın tek EC2’si <code>eu-north-1c</code>’de. İkinci subnet, EC2’nin ikinci bir kopyasını oluşturmaz.</p></li>
+    <li><h3>HTTP API, stage, integrations ve routes</h3><p>Bir public HTTP API ve iki private integration kurduk. <code>$default</code> stage URL’yi kökte sunar, auto-deploy route değişikliklerini yayına alır. Her integration’da <code>Overwrite path = $request.path</code> ile backend’in beklediği path’i koruduk. Route olmadan doğru path/method Gateway’den backend’e gitmez.</p></li>
+    <li><h3>Agent’ı public Gateway adresine bağlamak</h3><p>Bir REST route’u eklemek, Agent’ın HTTP istemcisinin hedefini kendiliğinden değiştirmez. <code>BILLING_API_BASE_URL</code> güncellendiğinde Agent, Billing’e aynı EC2 üzerinde olsa da Gateway üzerinden gitmeye başladı. EC2’de <code>curl</code> ile 200, restart sonrasında <code>active</code>, Chat tool trace’inde <code>query_bill</code> gördük.</p></li>
+    <li><h3>Canlı akışları doğrulamak</h3><p>Login ve fatura sorgusu çalıştı. Birleşik Chat yanıtı REST kullanım kaydı ile MCP kuralını birleştirdi. Simüle 20 dolar ödemeyle Ekim bakiyesi 80’den 60 dolara düştü. Operatör akışında Kasım faturası, güncel 50 dakikayı hesaplamadan sonra kaydetti.</p></li>
+  </ol>
+  <div class="surface" style="margin-top:1rem"><details><summary>Kurulum komutlarını tekrar hatırlamak</summary><ul>
+    <li><code>ssh -i</code> ve <code>scp -i</code> EC2’ye seçilen private key dosyasıyla bağlanır. Windows dosya izinleri fazla genişse OpenSSH key’i kullanmaz.</li>
+    <li><code>apt-get update</code> paket listesini tazeler. Docker deposu ve GPG key, ARM64 Ubuntu için uygun Docker paketinin kaynağını ve imza kontrolünü tanımlar.</li>
+    <li><code>docker compose -f … up -d --wait postgres</code> ayar dosyalarını birleştirir, PostgreSQL’i arka planda başlatır ve healthcheck sonucunu bekler.</li>
+    <li><code>.venv/bin/python -m pip check</code> kurulu Python paketlerinin bağımlılık uyumunu kontrol eder. İlgili paketleri import etmek, interpreter’ın bu paketleri gerçekten bulduğunu gösterir.</li>
+    <li><code>systemctl daemon-reload</code> unit tanımını tekrar okutur. <code>enable --now</code> servisleri şimdi ve sonraki açılışlarda başlatır. Env değişikliğinden sonra <code>restart</code>, servisin yeni değeri okumasını sağlar.</li>
+    <li><code>curl -fsS</code> HTTP hatası olduğunda başarısız olur ve hatayı gösterir. Agent adresini değiştirmeden önce EC2’den Gateway üzerinden demo faturasını <code>200</code> ile almıştık.</li>
+  </ul></details></div>
+</section>
+
+<section class="section" id="teslim">
+  <h2>Hocanın istediği ve elimizdeki kanıt</h2>
+  <p>Grup 2 belgesi, Agent’ın Billing REST çağrıları dahil tüm proje REST operasyonlarının Gateway’den geçmesini istiyor. MCP için ayrı yol öngörüyor. Belgede Cloud Map veya ayrı Security Group isimleri belirtilmiyor. Bu kaynaklar AWS’de private bağlantıyı kurmak için seçtiğimiz parçalar.</p>
+  <div class="surface"><ul class="list-rows">
+    <li><strong>Bu oturumda AWS’de</strong><div>Login, REST-only fatura özeti, birleşik REST + MCP, simüle ödeme ve operatör işlemlerini ekran ve terminal çıktılarında gördük. Birleşik test, JWT’li fatura detayının Agent üzerinden çalıştığını da gösterdi.</div></li>
+    <li><strong>Toplanacak teslim kanıtı</strong><div>Ayrı bir MCP-only AWS ekran görüntüsü, üç farklı MCP retrieval örneği, Gateway’de korumalı route için başarı ve hata çıktısı, test çalıştırma kanıtı ve kısa demo videosu. Yerel demo ve kodun mevcut olması, bunların AWS ekran kaydı olarak hazır olduğunu tek başına göstermez.</div></li>
+    <li><strong>README ve repo</strong><div>Canlı Gateway URL’si ve route tablosu, deploy komutları, varsayımlar, Swagger/OpenAPI, ER diyagramı, MCP tool şeması ve indeksleme yaklaşımı, maliyet notu ile test talimatı ve kanıtları.</div></li>
+  </ul></div>
+  <h3 style="margin-top:1.2rem">AWS referansları</h3>
+  <ul class="source-links"><li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html">HTTP API routes</a></li><li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-private.html">Private integrations ve Cloud Map</a></li><li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-vpc-links-v2.html">VPC Link V2</a></li><li><a href="https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html">Security Group kuralları</a></li><li><a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html">Stateful bağlantılar</a></li></ul>
+</section>
+</div>
+</div>
+</main>
+<script>
+  "use strict";
+  const entry = (question) => ({
+    title: "Tarayıcı soruyu gönderir",
+    text: question + " Arayüz, mesajı ve girişte aldığı uygulama JWT’sini HTTPS isteğiyle Gateway’e yollar.",
+    packet: "Browser → Gateway · POST /api/v1/chat",
+    nodes: ["browser", "gateway"], wires: ["public"]
+  });
+  const dispatch = {
+    title: "Gateway, Chat’i bulur",
+    text: "Route Chat integration’ı seçer. Gateway, Cloud Map’ten hedef private IP ve 8002 portunu keşfeder ve private HTTP isteğini se4458-link üzerinden gönderir. Chat, abonenin JWT’sini doğrular.",
+    packet: "Gateway → VPC Link → Chat · TCP 8002",
+    nodes: ["gateway", "cloud", "link", "chat"], wires: ["discovery", "link", "chat"]
+  };
+  const initialize = {
+    title: "Chat MCP oturumunu açar",
+    text: "Kod, Agent döngüsünden önce MCP SDK oturumuna giriyor. SDK yerel MCP sunucusuyla initialize mesajlaşmasını yapar. Rehber araması için modelin ayrıca tool istemesi gerekir.",
+    packet: "Chat → 127.0.0.1:8001/mcp · initialize",
+    nodes: ["chat", "mcp"], wires: ["mcp"]
+  };
+  const model = (decision) => ({
+    title: "Model bir sonraki işi seçer",
+    text: "Agent, soruyu ve tanımlı tool şemalarını OpenAI Responses API’ye yollar. " + decision,
+    packet: "Chat / Agent → api.openai.com:443",
+    nodes: ["chat", "openai"], wires: ["openai"]
+  });
+  const rest = (detail) => ({
+    title: "Agent, aynı Gateway’i tekrar çağırır",
+    text: "Agent bir Billing HTTP isteği başlatır. Hedefi BILLING_API_BASE_URL belirler. Bu kez route, billing integration’ı seçer ve VPC Link üzerinden EC2’nin 8000 portuna gönderir.",
+    packet: "GET /api/v1/subscribers/A001/bills/2026/10" + (detail ? "/details" : ""),
+    nodes: ["chat", "gateway", "cloud", "link", "billing"], wires: ["rest", "discovery", "link", "billing"]
+  });
+  const records = (detail) => ({
+    title: "Billing, kayıtları okur",
+    text: detail ? "Billing JWT ile fatura sahipliğini kontrol eder ve PostgreSQL’den kullanım/ücret detaylarını okur. Örnekte kayıtlı internet kullanımı 35 GB." : "Billing PostgreSQL’den kayıtlı Ekim faturasını okur. Örneğin toplam 80 dolar. Kalan bakiye, yapılan ödemeye göre değişir.",
+    packet: "Billing → PostgreSQL · 127.0.0.1:55458",
+    nodes: ["billing", "db"], wires: ["db"]
+  });
+  const restReturn = {
+    title: "Fatura verisi Agent’a döner",
+    text: "Billing’in HTTP yanıtı VPC Link ve Gateway üzerinden, ikinci isteği başlatan Agent’a döner. Agent tool sonucunu call_id ile modelin bir sonraki çağrısına ekler.",
+    packet: "Billing → VPC Link → Gateway → Agent",
+    nodes: ["billing", "link", "gateway", "chat"], reverse: ["billing", "link", "rest"]
+  };
+  const guide = (reframe) => ({
+    title: "Agent rehber tool’unu çağırır",
+    text: reframe ? "İlk tool sonucundan sonra Agent modele tekrar gider. Model fiyat kuralı için search_billing_documentation ister. Agent bu tool’u aynı EC2’deki MCP sunucusunda çalıştırır." : "Model search_billing_documentation için bir query üretir. Agent bu sorguyla yerel MCP sunucusuna tool çağrısı gönderir. Sunucu rehber indeksinden ilgili bölümleri bulur.",
+    packet: "Agent → MCP · tools/call · search_billing_documentation",
+    nodes: reframe ? ["openai", "chat", "mcp"] : ["chat", "mcp"], wires: reframe ? ["openai", "mcp"] : ["mcp"]
+  });
+  const guideReturn = {
+    title: "Rehber alıntısı Agent’a döner",
+    text: "MCP, §3.1 ve §3.2 gibi eşleşen bölümleri Agent’a verir. Agent bu sonuçları ilgili call_id ile modele iletir. Rehber, abonenin canlı fatura ve ödeme kaydını okumaz.",
+    packet: "MCP → Agent · pasajlar ve bölüm numaraları",
+    nodes: ["mcp", "chat"], reverse: ["mcp"]
+  };
+  const sendResults = {
+    title: "Agent tool sonucunu modele iletir",
+    text: "Agent, önceki model çıktısını ve tool sonucunu aynı Chat isteğinin geçmişinde taşır. Model, function_call_output içindeki call_id ile tool sonucunun hangi çağrıya ait olduğunu bilir.",
+    packet: "Agent → OpenAI · function_call_output + call_id",
+    nodes: ["chat", "openai"], wires: ["openai"]
+  };
+  const answer = (text) => ({
+    title: "Model yanıtı hazırlar",
+    text, packet: "OpenAI → Chat / Agent · output_text",
+    nodes: ["openai", "chat"], reverse: ["openai"]
+  });
+  const finish = {
+    title: "Tarayıcı yanıtı gösterir",
+    text: "Chat, ilk POST isteğine yanıtı ve tool trace’i döndürür. Bu cevap Gateway’den tarayıcıya ulaşır. Tool trace çalıştırılan araçları gösterir.",
+    packet: "Chat → VPC Link → Gateway → Browser",
+    nodes: ["chat", "link", "gateway", "browser"], reverse: ["chat", "link", "public"]
+  };
+  const journeys = {
+    rest: [entry("“Ekim 2026 faturam kaç dolar?”"), dispatch, initialize, model("Bu soru kayıtlı tutarı istiyor. Model örnekte query_bill aracını seçiyor."), rest(false), records(false), restReturn, sendResults, answer("Model kayıtlı 80 dolarlık toplamı ve API’den dönen güncel bakiyeyi açıklar."), finish],
+    mcp: [entry("“20 GB paketimi 1 GB geçersem ne kadar ek ücret öderim?”"), dispatch, initialize, model("Bu soru bir fiyat kuralını soruyor. Model rehber arama aracını seçebilir."), guide(false), guideReturn, sendResults, answer("§3.2’ye göre başlayan her 10 GB’lık ek blok 10 dolar. 1 GB aşım da bir ek blok olarak ücretlenir."), finish],
+    both: [entry("“Ekim 2026’da paketimi kaç GB aştım ve internet neden 70 dolar?”"), dispatch, initialize, model("Örnek canlı tool trace’te model önce query_bill_details ile gerçek kullanımı istedi."), rest(true), records(true), restReturn, sendResults, guide(true), guideReturn, sendResults, answer("Model iki kaynağı birleştirir. 35 GB kullanım − 20 GB dahil = 15 GB aşım. İki ek blok, 50 + 20 = 70 dolar. Ücret kuralı §3.1–3.2."), finish],
+    hello: [entry("“Selam”"), dispatch, initialize, model("Model selamı yanıtlamak için bir function_call üretmeyebilir."), answer("Model örneğin “Selam! Nasıl yardımcı olabilirim?” yanıtını döndürür. Fatura sorgusu ve rehber arama tool’u çalışmadığı için Tool trace boş kalır."), finish]
+  };
+  const verdicts = {
+    route: ["blocked", "404 · API Gateway", "Örneğin GET /bilinmeyen için eşleşen method/path ya da catch-all route yok. Gateway, private bağlantı başlatmadan Not Found cevabı verir."],
+    nojwt: ["blocked", "401 · Billing FastAPI", "Fatura detay route’u doğru ve private bağlantı kurulabilir. Billing, eksik veya geçersiz uygulama JWT’si nedeniyle isteği reddeder."],
+    forbidden: ["blocked", "403 · Billing FastAPI", "JWT geçerli olabilir. Abone oturumunda billing:write scope’u bulunmadığı için POST /api/v1/usage reddedilir."],
+    direct: ["blocked", "TCP engellenir · EC2 Security Group", "EC2’nin 8000 portunda kaynak billing-link olmalı. İnternetten gelen bağlantı bu kaynağa ait olmadığı için FastAPI’ye ulaşmaz ve uygulama HTTP cevabı oluşmaz."],
+    gateway: ["allowed", "TCP izinli · İki Security Group", "VPC Link ENI’si billing-link’e bağlı. Outbound hedef EC2, inbound kaynak ENI grubu. Private TCP 8002 bağlantısı kurulabilir, ardından Chat kendi HTTP kontrollerini yapar."],
+    ssh: ["blocked", "TCP engellenir · EC2 Security Group", "Inbound 22 kuralı seçtiğimiz public IPv4 /32 adresine izin verir. Farklı bir kaynaktan gelen yeni SSH bağlantısı bu kurala uymaz."],
+    llm: ["allowed", "Cevap izinli · Stateful bağlantı", "EC2 bağlantıyı OpenAI’nin hedef 443 portuna outbound olarak başlatır. OpenAI cevabı EC2’nin geçici kaynak portuna kurulu bağlantı üzerinden döner."],
+    loopback: ["allowed", "Yerel trafik · EC2 loopback", "Agent, 127.0.0.1:8001 üzerinden aynı makinedeki MCP sunucusuna bağlanır. VPC Link’in ENI’si ve public API route’u bu yol üzerinde yer almaz."],
+    timeout: ["blocked", "504 olabilir · Gateway timeout", "Method/path doğru olsa da Gateway integration süresi içinde yanıt alamayabilir. Bu vakayı route eşleşmesi ve auth hatasından ayırmak için Chat ve Gateway loglarını karşılaştırırız."]
+  };
+  const scenarioButtons = Array.from(document.querySelectorAll("[data-scenario]"));
+  const nodes = Array.from(document.querySelectorAll("[data-node]"));
+  const wires = Array.from(document.querySelectorAll("[data-wire]"));
+  const prev = document.getElementById("prev");
+  const next = document.getElementById("next");
+  const stepIndex = document.getElementById("step-index");
+  const stepTitle = document.getElementById("step-title");
+  const stepDescription = document.getElementById("step-description");
+  const stepPacket = document.getElementById("step-packet");
+  let scenario = "rest";
+  let index = 0;
+  function renderStep() {
+    const sequence = journeys[scenario];
+    const step = sequence[index];
+    stepIndex.textContent = (index + 1) + " / " + sequence.length + " adım";
+    stepTitle.textContent = step.title;
+    stepDescription.textContent = step.text;
+    stepPacket.textContent = step.packet;
+    prev.disabled = index === 0;
+    next.disabled = index === sequence.length - 1;
+    for (const button of scenarioButtons) button.setAttribute("aria-pressed", String(button.dataset.scenario === scenario));
+    for (const node of nodes) node.classList.toggle("active", step.nodes.includes(node.dataset.node));
+    for (const wire of wires) {
+      wire.classList.toggle("active", (step.wires ?? []).includes(wire.dataset.wire));
+      wire.classList.toggle("reply", (step.reverse ?? []).includes(wire.dataset.wire));
+    }
+  }
+  for (const button of scenarioButtons) button.addEventListener("click", () => { scenario = button.dataset.scenario; index = 0; renderStep(); });
+  prev.addEventListener("click", () => { index -= 1; renderStep(); });
+  next.addEventListener("click", () => { index += 1; renderStep(); });
+  const traffic = document.getElementById("traffic");
+  const gateResult = document.getElementById("gate-result");
+  const gateTitle = document.getElementById("gate-title");
+  const gateText = document.getElementById("gate-text");
+  function renderVerdict() {
+    const [status, title, text] = verdicts[traffic.value];
+    gateResult.dataset.status = status;
+    gateTitle.textContent = title;
+    gateText.textContent = text;
+  }
+  traffic.addEventListener("change", renderVerdict);
+  renderStep();
+  renderVerdict();
+</script>
+</body>
+</html>

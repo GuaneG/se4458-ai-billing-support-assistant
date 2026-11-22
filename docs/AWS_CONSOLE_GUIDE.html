@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS Deploy Rehberi · SE4458</title>
+<link rel="icon" href="data:,">
+<style>
+:root{--ink:#142d28;--muted:#52665e;--green:#00674b;--mint:#d9f3e7;--paper:#fbfbf5;--white:#fff;--line:#cfd9d1;--amber:#f9e9c9;--dark:#102b23}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.55 "Segoe UI",system-ui,sans-serif}
+a{color:var(--green);text-underline-offset:.2em}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #007f63;outline-offset:3px}
+code{font:500 .91em/1.5 ui-monospace,"Cascadia Code",monospace;overflow-wrap:anywhere}
+.wrap{width:min(1120px,calc(100% - 3rem));margin-inline:auto}
+header{background:var(--dark);color:#fff;padding:1.35rem 0 2.35rem}
+header a{color:#b9f5d7}
+.brand{display:flex;flex-wrap:wrap;column-gap:1.1rem;align-items:center;font-size:.9rem;font-weight:650;color:#bce0d0;letter-spacing:.02em}
+.brand span:first-child{color:#fff}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(2.15rem,6vw,4.25rem);line-height:1.04;letter-spacing:-.055em;margin:1.6rem 0 .8rem}
+h2{font-size:clamp(1.55rem,3.4vw,2.1rem);line-height:1.1;letter-spacing:-.04em;margin-bottom:.65rem}
+h3{line-height:1.25}
+header p{max-width:43rem;color:#d9e9e1;margin-bottom:1.35rem}
+.button-link{display:inline-block;padding:.6rem .9rem;border-radius:.55rem;background:#c9f3da;color:var(--dark);font-weight:700;text-decoration:none}
+nav{background:var(--white);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:.5rem 1.4rem;flex-wrap:wrap;padding-block:.78rem}
+nav a{font-size:.92rem;font-weight:650}
+main{padding-block:1.7rem 3rem}
+section{margin-bottom:2.3rem;scroll-margin-top:1rem}
+.subtitle{max-width:50rem;color:var(--muted);margin-bottom:1rem}
+.flow{padding:1rem;background:#eaf4ed;border:1px solid var(--line);border-radius:1rem}
+.scene-controls{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+button{font:inherit;color:var(--green);cursor:pointer;background:#fff;border:1px solid #b6d0c3;border-radius:.45rem;padding:.36rem .7rem;font-size:.92rem;font-weight:670}
+button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.topology{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.2fr) auto minmax(0,2.1fr);gap:.45rem;align-items:center}
+.node{background:var(--white);border:1px solid var(--line);border-radius:.65rem;padding:.65rem .75rem}
+.node strong,.node small{display:block}
+.node small,.arrow small{color:var(--muted);font-size:.8rem}
+.arrow{color:var(--green);text-align:center;font-size:1.3rem;font-weight:800}
+.arrow small{display:block;font-weight:650}
+.host{padding:.65rem;border:1px dashed #86aa96;border-radius:.65rem;background:#f8fcf9}
+.host-title{display:flex;justify-content:space-between;gap:.4rem;font-size:.85rem;font-weight:750;margin-bottom:.45rem}
+.host-title span:last-child{color:var(--muted);font-weight:600}
+.apps{display:grid;grid-template-columns:1fr 1fr;gap:.35rem}
+.apps .node{font-size:.9rem;padding:.45rem .5rem}
+.topology [data-node].active{border-color:#008963;box-shadow:inset 0 0 0 1px #008963;background:#f5fff8}
+.external{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:.65rem;color:var(--muted);font-size:.86rem}
+.external span:last-child{padding:.3rem .5rem;border:1px solid var(--line);background:#fff;border-radius:.4rem;color:var(--ink)}
+.trace{margin:.8rem 0 0;padding:.65rem .8rem;border-left:3px solid var(--green);background:#fff;min-height:3.1rem}
+.trace strong{display:block}
+.caption{color:var(--muted);font-size:.86rem;margin:.55rem 0 0}
+.steps{display:grid;gap:.8rem}
+.card{background:var(--white);border:1px solid var(--line);border-radius:.8rem;overflow:hidden}
+.card-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.1rem;padding:1rem}
+.card h3{margin:0 0 .4rem;font-size:1.2rem}
+.card p:last-child{margin-bottom:0}
+.console{border:1px solid var(--line);border-radius:.55rem;background:#f6f8f6;font-size:.9rem;align-self:start;overflow:hidden}
+.console .crumb{background:#273a33;color:#fff;display:block;padding:.42rem .6rem;font-weight:600;font-size:.81rem}
+.console dl{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);margin:0}
+.console dt,.console dd{margin:0;padding:.34rem .55rem;border-bottom:1px solid #dce4dd;overflow-wrap:anywhere}
+.console dt{color:var(--muted);font-weight:650}
+.console dd{font-weight:600}
+.console dl > :nth-last-child(-n+2){border-bottom:0}
+.console ul{margin:.5rem 0;padding:0 .65rem 0 1.65rem}
+.result{padding:.64rem 1rem;border-top:1px solid var(--line);background:#f2faf5;font-size:.9rem;margin:0}
+.result strong{color:var(--green)}
+.callout{padding:.85rem 1rem;background:var(--amber);border:1px solid #dccaa5;border-radius:.65rem;margin-block:.8rem}
+.callout p{margin:0}
+ table{width:100%;border-collapse:collapse;background:#fff;font-size:.93rem}
+ th,td{padding:.52rem .62rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+ th{background:#eaf4ed}
+ .two{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+ .mini{background:#fff;border:1px solid var(--line);border-radius:.65rem;padding:.85rem 1rem}
+ .mini h3{margin:0 0 .45rem;font-size:1.02rem}
+ .mini ul{padding-left:1.2rem;margin:0}
+ .mini li + li{margin-top:.35rem}
+ address{font-style:normal;color:var(--muted)}
+ footer{padding-top:.8rem;border-top:1px solid var(--line);font-size:.89rem;color:var(--muted)}
+ @media(max-width:760px){.wrap{width:calc(100% - 1.5rem)}.topology{grid-template-columns:1fr}.arrow{font-size:0}.arrow::after{content:"↓";font-size:1.2rem}.arrow small{display:inline;margin-right:.3rem}.card-body,.two{grid-template-columns:1fr}.external{gap:.35rem;align-items:flex-start;flex-direction:column}.host-title{flex-wrap:wrap}}
+ @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+ @media print{header{background:#fff;color:#142d28;border-bottom:1px solid #999}header p,.brand,.brand span:first-child{color:#142d28}.button-link,nav,.scene-controls{display:none}.wrap{width:100%}.card,.flow,.mini{break-inside:avoid}.console .crumb{background:#eee;color:#142d28}}
+.technical-plan{background:var(--white);border:1px solid var(--line);border-radius:.8rem;padding:clamp(.85rem,3vw,1.5rem);min-width:0}
+.technical-plan h3{margin:1.8rem 0 .6rem;font-size:1.25rem}
+.technical-plan h4{margin:1.25rem 0 .5rem;font-size:1.05rem}
+.technical-plan ol,.technical-plan ul{padding-left:1.4rem}
+.technical-plan li + li{margin-top:.35rem}
+.technical-plan pre{background:var(--dark);color:#effaf4;border-radius:.6rem;padding:.9rem 1rem;overflow:auto;max-width:100%;margin-block:1rem;line-height:1.55}
+.technical-plan pre:focus-visible{outline:3px solid #007f63;outline-offset:3px}
+.technical-plan pre code{overflow-wrap:normal;font-weight:400}
+.technical-plan :not(pre)>code{background:#edf6f0;border-radius:.2rem;padding:.06em .24em}
+.technical-plan p:last-child{margin-bottom:0}
+@media print{.technical-plan pre{background:#f4f4f4;color:#111;white-space:pre-wrap;overflow-wrap:anywhere}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand"><span>SE4458 · Grup 2</span><span>AI Billing Support Assistant</span></div>
+    <h1>AWS deploy rehberi</h1>
+    <p>B mimarisini EC2 üzerinde kur, servisleri API Gateway’e bağla ve hocaya göstereceğin canlı akışları doğrula.</p>
+    <a class="button-link" href="#teknik-plan">Teknik plan ve komutlar</a>
+  </div>
+</header>
+<nav aria-label="Rehber bölümleri">
+  <div class="wrap">
+    <a href="#mimari">Mimari</a><a href="#kurulum">Console kurulumu</a><a href="#test">Canlı test</a><a href="#teslim">Teslim kanıtları</a><a href="#maliyet">Maliyet</a><a href="#teknik-plan">Teknik plan</a>
+  </div>
+</nav>
+<main class="wrap">
+  <section id="mimari" aria-labelledby="mimari-title">
+    <h2 id="mimari-title">İstek hangi yoldan gidiyor?</h2>
+    <p class="subtitle">Gateway internetten gelen HTTPS isteklerini karşılar. VPC Link Gateway’i private ağa bağlar, Cloud Map her servisin private IP ve portunu Gateway’e bildirir. Bir senaryo seçip hangi parçaların devreye girdiğini izle.</p>
+    <div class="flow">
+      <div class="scene-controls" role="group" aria-label="İstek senaryoları">
+        <button type="button" data-scene="chat" aria-pressed="true">Chat açılışı</button>
+        <button type="button" data-scene="rest" aria-pressed="false">REST tool</button>
+        <button type="button" data-scene="mcp" aria-pressed="false">MCP tool</button>
+        <button type="button" data-scene="payment" aria-pressed="false">Ödeme onayı</button>
+      </div>
+      <div class="topology" role="group" aria-label="Tarayıcıdan AWS içindeki servislere bağlantılar">
+        <div class="node active" data-node="browser"><strong>Tarayıcı</strong><small>Login ve Chat UI</small></div>
+        <div class="arrow"><small>HTTPS</small><span aria-hidden="true">→</span></div>
+        <div class="node active" data-node="gateway"><strong>API Gateway</strong><small>HTTP API · $default</small></div>
+        <div class="arrow"><small>VPC Link</small><span aria-hidden="true">→</span><small>Cloud Map hedefi</small></div>
+        <div class="host">
+          <div class="host-title"><span>EC2 · t4g.small</span><span>VPC içi</span></div>
+          <div class="apps">
+            <div class="node active" data-node="chat"><strong>Chat / Agent</strong><small>8002 · private trafik</small></div>
+            <div class="node" data-node="billing"><strong>Billing REST</strong><small>8000 · private trafik</small></div>
+            <div class="node" data-node="mcp"><strong>MCP Server</strong><small>8001 · loopback</small></div>
+            <div class="node" data-node="db"><strong>PostgreSQL</strong><small>55458 · EBS üzerinde</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="external"><span>MCP ve PostgreSQL bağlantıları EC2 içinde kalır.</span><span class="node" data-node="llm">OpenAI API · dış HTTPS</span></div>
+      <p id="trace" class="trace" aria-live="polite"><strong>Chat açılışı</strong><span>Tarayıcı → Gateway → Chat. HTML ve /chat-assets aynı HTTPS origin üzerinden gelir.</span></p>
+    </div>
+  </section>
+
+  <section id="kurulum" aria-labelledby="kurulum-title">
+    <h2 id="kurulum-title">AWS Console kurulumu</h2>
+    <p class="subtitle">Kartlar temsili Console görselleridir. Hesabındaki Region, kaynak ID’leri ve private IP adresleri kurulurken belirlenecek. Linux ve PowerShell komutları teknik planda.</p>
+    <div class="steps">
+      <article class="card" id="ec2">
+        <div class="card-body">
+          <div><h3>EC2 · uygulamaların çalışacağı makine</h3><p>Chat, Billing ve MCP Python süreçleri bu VM’de çalışır. <code>t4g.small</code> ARM tabanlı olduğu için <strong>arm64</strong> AMI seç. Public subnet ve public IPv4, paket indirme ve OpenAI için outbound Internet sağlar.</p></div>
+          <div class="console"><span class="crumb">EC2 / Instances / Launch instances</span><dl>
+            <dt>AMI</dt><dd>Ubuntu Server 26.04 LTS · arm64</dd>
+            <dt>Instance type</dt><dd>t4g.small</dd>
+            <dt>Capacity</dt><dd>On-Demand</dd>
+            <dt>Network</dt><dd>Public subnet · Auto-assign public IP</dd>
+            <dt>Metadata</dt><dd>IMDSv2 required</dd>
+          </dl></div>
+        </div>
+        <p class="result"><strong>Kontrol</strong> — Instance status checks geçer. SSH sonrası <code>uname -m</code> çıktısı <code>aarch64</code>.</p>
+      </article>
+
+      <article class="card" id="security">
+        <div class="card-body">
+          <div><h3>Security Groups · hangi bağlantı içeri girebilir?</h3><p>EC2 Security Group, Gateway’in VPC Link Security Group’undan gelen iki uygulama portunu kabul eder. SSH yalnız senin public IP’nden açılır. MCP ve PostgreSQL host üzerindeki loopback adresine bağlıdır.</p></div>
+          <div class="console"><span class="crumb">EC2 / Security Groups / Inbound rules</span><dl>
+            <dt>22 / TCP</dt><dd>Kendi public IPv4 adresin /32</dd>
+            <dt>8000 / TCP</dt><dd>Source · billing-link SG</dd>
+            <dt>8002 / TCP</dt><dd>Source · billing-link SG</dd>
+            <dt>billing-link outbound</dt><dd>8000 ve 8002 → billing-host SG</dd>
+          </dl></div>
+        </div>
+        <p class="result"><strong>Kontrol</strong> — 8000 ve 8002 için kaynak bir SG ID’si. 8001 ve 55458 için inbound kuralı yok.</p>
+      </article>
+
+      <article class="card" id="ebs">
+        <div class="card-body">
+          <div><h3>EBS ve servisler · süreçler yeniden başlarsa</h3><p>Docker named volume, PostgreSQL verisini EBS root diskine yazar. EC2 Stop/Start veriyi korur. Terminate için <strong>Delete on termination</strong> ayarı belirleyicidir. DB Docker ile, üç uygulama ayrı systemd servisleriyle çalışır. Onay taslakları süreç belleğinde olduğundan Chat’i tek worker ile başlat.</p></div>
+          <div class="console"><span class="crumb">EC2 / Launch instances / Configure storage</span><dl>
+            <dt>Volume type</dt><dd>gp3</dd><dt>Size</dt><dd>16 GiB · öneri</dd>
+            <dt>Encrypted</dt><dd>Yes</dd><dt>Storage path</dt><dd>Docker named volume → EBS root disk</dd>
+            <dt>Delete on termination</dt><dd>Terminate öncesinde saklama kararını kontrol et</dd>
+          </dl></div>
+        </div>
+        <p class="result"><strong>Kontrol</strong> — PostgreSQL <code>healthy</code>, üç systemd servisi <code>active</code>. Yeni DB’de A001 Ekim 2026 faturası $80.</p>
+      </article>
+
+      <article class="card" id="cloud-map">
+        <div class="card-body">
+          <div><h3>Cloud Map ve VPC Link · Gateway hedefi nasıl bulur?</h3><p>Cloud Map her servisin private IP ve portunu kaydeder. VPC Link, Gateway’in bu adreslere VPC içinden ulaşması için network interface oluşturur. Aynı EC2 IP’si kullanılır, portlar farklıdır.</p></div>
+          <div class="console"><span class="crumb">AWS Cloud Map / Namespaces / Register service instance</span><dl>
+            <dt>Discovery</dt><dd>API calls · HTTP namespace</dd>
+            <dt>Instance type</dt><dd>IP address</dd>
+            <dt>billing service</dt><dd>EC2 private IPv4 :8000</dd>
+            <dt>chat service</dt><dd>EC2 private IPv4 :8002</dd>
+            <dt>Gateway VPC Link</dt><dd>Aynı VPC’de desteklenen subnets ve billing-link SG</dd>
+          </dl></div>
+        </div>
+        <p class="result"><strong>Kontrol</strong> — İki Cloud Map service kaydı doğru private IP ve portu gösterir. VPC Link <code>AVAILABLE</code>.</p>
+      </article>
+
+      <article class="card" id="gateway">
+        <div class="card-body">
+          <div><h3>API Gateway · route ile integration’ı bağla</h3><p><strong>Route</strong> method ve path eşleştirir. <strong>Integration</strong> hedef servisi seçer. <code>$default</code> stage ile Chat sayfası, dosyaları ve API istekleri aynı HTTPS origin’de kalır. Tüm route’lar ve auth durumları teknik planda.</p></div>
+          <div class="console"><span class="crumb">API Gateway / HTTP API / Routes &amp; Integrations</span><dl>
+            <dt>Stage</dt><dd><code>$default</code> · Auto-deploy</dd>
+            <dt>Örnek route</dt><dd><code>GET /api/v1/subscribers/{subscriber_no}/bills/{year}/{month}/details</code></dd>
+            <dt>Integration</dt><dd>VPC Link · Billing Cloud Map service</dd>
+            <dt>Parameter mapping</dt><dd><code>overwrite:path = $request.path</code></dd>
+            <dt>JWT kontrolü</dt><dd>FastAPI · mevcut HS256 ve fatura sahipliği</dd>
+          </dl></div>
+        </div>
+        <p class="result"><strong>Kontrol</strong> — Invoke URL Chat’i açar. Korumalı detail route, A001 JWT ile <code>200</code>, token olmadan <code>401</code> döndürür.</p>
+      </article>
+    </div>
+    <div class="callout"><p><strong>Agent’ın Billing adresini bağla.</strong> Chat servisinin <code>BILLING_API_BASE_URL</code> değeri Gateway’in HTTPS Invoke URL’si. <code>MCP_URL</code> ise <code>http://127.0.0.1:8001/mcp</code>. Gateway logunda tarayıcının <code>POST /api/v1/chat</code> isteğinden ayrı bir Billing GET satırı görebilirsin.</p></div>
+  </section>
+
+  <section id="test" aria-labelledby="test-title">
+    <h2 id="test-title">Canlıda ne görmen gerekiyor?</h2>
+    <p class="subtitle">Önce Gateway route’larını doğrudan doğrula. Sonra aynı URL’nin Chat ekranından Agent’ın çağrılarını izle. Tarih ve tutarlar yeni seed için verilmiştir.</p>
+    <table>
+      <thead><tr><th scope="col">Deneme</th><th scope="col">Beklenen</th></tr></thead>
+      <tbody>
+        <tr><td>Fatura özeti · A001 / Ekim 2026</td><td><code>200</code> · toplam $80</td></tr>
+        <tr><td>Fatura detayı · JWT yok / A001 JWT var</td><td><code>401</code> / <code>200</code> · <code>page=2&amp;pageSize=1</code> ile bir kalem</td></tr>
+        <tr><td>“20 GB paketimi 1 GB geçersem ek ücret ne kadar?”</td><td>MCP · §3.2, $10</td></tr>
+        <tr><td>“Ekim 2026 faturam kaç dolar?”</td><td>REST · $80</td></tr>
+        <tr><td>“Ekim 2026 internet ücretim neden $70?”</td><td>REST + MCP · 35 GB, $50 + $20</td></tr>
+        <tr><td>“Ekim 2026 faturama $20 öde.” · onayla</td><td>Onaydan sonra $80 → $60. Aynı confirmation ID tekrar gönderilirse <code>409</code>.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><p><strong>504 görürsen</strong> Gateway ve Chat loglarındaki süreleri karşılaştır. HTTP API entegrasyonu en çok 30 saniye bekler. Ödeme onayında timeout sonrası önce bakiyeyi kontrol et.</p></div>
+  </section>
+
+  <section id="teslim" aria-labelledby="teslim-title">
+    <h2 id="teslim-title">Hocaya göstereceğin kanıtlar</h2>
+    <div class="two">
+      <article class="mini"><h3>README ve Gateway</h3><ul><li>Canlı Invoke URL, route eşlemeleri ve cloud deploy adımları.</li><li>En az iki Gateway route, korumalı istek için başarı ve hata.</li><li>A001 test verisi ve testleri tekrar çalıştırma adımları.</li></ul></article>
+      <article class="mini"><h3>Demo videosu ve loglar</h3><ul><li>MCP-only, REST-only ve birleşik Chat soruları ve tool trace.</li><li>Üç MCP retrieval. §3.2, §5.1 ve §6.3.</li><li>Onaylı simüle ödeme ve bakiye değişimi.</li></ul></article>
+    </div>
+  </section>
+
+  <section id="maliyet" aria-labelledby="maliyet-title">
+    <h2 id="maliyet-title">Maliyeti ve erişim süresini kontrol et</h2>
+    <div class="two">
+      <article class="mini"><h3>Oluşturmadan önce</h3><ul><li>Region fiyatı, AWS kredi bakiyesi ve bitiş tarihi.</li><li>EC2 saati, EBS, public IPv4, API Gateway, Cloud Map ve varsa CloudWatch Logs.</li><li>AWS Budgets e-posta uyarısı ve ayrı OpenAI bakiyesi.</li></ul></article>
+      <article class="mini"><h3>Demo sonrası</h3><ul><li>Hocanın URL’ye ne zamana kadar erişeceğini öğren.</li><li>Stop sonrası EBS ve diğer tutulan kaynakların ücretlerine bak.</li><li>Kapatma öncesi kanıtları ve kalmasını istediğin veriyi sakla.</li></ul></article>
+    </div>
+  </section>
+
+  <!-- Rendered from AWS_DEPLOY_PLAN.md -->
+  <section id="teknik-plan" aria-labelledby="teknik-plan-baslik" tabindex="-1">
+    <h2 id="teknik-plan-baslik">Teknik plan ve komutlar</h2>
+    <div class="technical-plan">
+<p>Bu plan seçilen B mimarisini yerel projeden AWS&#39;ye taşımak için hazırlanmıştır.
+Canlı URL, hesap, Region ve kaynak ID&#39;leri kurulum sırasında doldurulur.
+<a href="#mimari">Console rehberini aç</a> · <a href="LOCAL_DEMO_EVIDENCE.md">Yerel test kanıtları</a></p>
+<h3>1. Mimari ve başlangıç değerleri</h3>
+<p>Tarayıcı Gateway&#39;in HTTPS URL&#39;sini açar. Gateway, VPC Link V2 üzerinden aynı
+EC2&#39;deki Chat ve Billing servislerine gider. AWS Cloud Map iki hedefin private IP
+ve portunu bildirir. Domain, NAT Gateway ve load balancer bu tasarım için
+gerekmez. EC2&#39;nin public IPv4 adresi outbound internet ve kısıtlı SSH içindir.
+Chat, OpenAI&#39;ya HTTPS, MCP&#39;ye loopback üzerinden Streamable HTTP ile ulaşır.
+Billing REST tool çağrıları Gateway HTTPS URL&#39;sine gider. Böylece Chat&#39;in
+dışarıdan çağrılan endpoint&#39;leri ve Agent&#39;ın içinden yapılan Billing REST
+çağrıları aynı Gateway üzerinden izlenebilir.</p>
+<table>
+<thead>
+<tr>
+<th>Parça</th>
+<th>Önerilen değer</th>
+<th>Doğrulama</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Region / VPC</td>
+<td>Hesabında <code>t4g.small</code> ve VPC Link V2 destekleyen tek Region. EC2 ve link subnets aynı VPC&#39;de.</td>
+<td>Region, AZ ID ve VPC ID kontrolü</td>
+</tr>
+<tr>
+<td>EC2</td>
+<td>Canonical Ubuntu Server 26.04 LTS <strong>arm64</strong> ve <code>t4g.small</code>. Public subnet, internet gateway route ve public IPv4. IMDSv2 required. Başlangıçta T4g <strong>Standard</strong> credit mode.</td>
+<td>EC2 status checks geçer ve <code>uname -m</code> → <code>aarch64</code></td>
+</tr>
+<tr>
+<td>EBS</td>
+<td>Şifreli gp3 root disk, <strong>16 GiB öneri</strong>. Mevcut Compose named volume bu disk üzerinde kalır.</td>
+<td><code>docker volume inspect se4458-billing_billing-data --format &#39;{{.Mountpoint}}&#39;</code></td>
+</tr>
+<tr>
+<td><code>billing-host</code> SG</td>
+<td>Inbound TCP 22 yalnız kendi public IPv4 <code>/32</code> adresinden. TCP 8000 ve 8002 yalnız <code>billing-link</code> SG&#39;den.</td>
+<td>Internetten doğrudan 8000/8002 açık değildir.</td>
+</tr>
+<tr>
+<td><code>billing-link</code> SG</td>
+<td>Inbound kural gerekmez. Outbound TCP 8000 ve 8002 hedef <code>billing-host</code> SG.</td>
+<td>Link <code>AVAILABLE</code>, Gateway iki servise de ulaşır.</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td><code>0.0.0.0:8000</code>, <code>billing_api.main:app</code></td>
+<td>EC2 içinden GET <code>/</code> ve test fatura özeti</td>
+</tr>
+<tr>
+<td>Chat</td>
+<td><code>0.0.0.0:8002</code>, <code>agent.chat_api:app</code>, <strong>1 worker</strong></td>
+<td>EC2 içinden GET <code>/</code>, Gateway&#39;den login ve chat</td>
+</tr>
+<tr>
+<td>MCP</td>
+<td><code>127.0.0.1:8001/mcp</code>, <code>mcp_server.server:app</code></td>
+<td>Chat üzerinden rehber sorusu</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>Compose <code>postgres</code>. Host <code>127.0.0.1:55458</code> → container <code>5432</code>.</td>
+<td>Compose <code>healthy</code> ve A001/Ekim 2026 test kaydı</td>
+</tr>
+</tbody></table>
+<p>EC2 outbound erişimi Ubuntu/Docker paketleri, OpenAI ve Gateway HTTPS için
+gerekir. İlk kurulumda varsayılan outbound kuralı bu trafiği karşılar. Cloud
+Map kayıtlarında EC2&#39;nin <strong>private IPv4</strong> adresi kullanılır. Stop/start sonrası
+otomatik public IP değişebilir. EC2&#39;nin private IP&#39;si değişirse Cloud Map
+kayıtlarını güncelle. Tek EC2 demo için tek hata noktasıdır. Ubuntu/ARM
+paket kurulumu ve canlı Gateway davranışı deploy gününde doğrulanır.</p>
+<p><strong>Kaydedilecek değerler:</strong> Region, VPC ID, EC2 private IPv4, SSH için public IPv4,
+VPC Link ID, iki Cloud Map service ID ve Gateway Invoke URL. Parola ve token bu
+listeye girmez.</p>
+<h3>2. EC2&#39;ye kodu taşı ve PostgreSQL&#39;i başlat</h3>
+<p>Kodu GitHub&#39;a aldıktan sonra EC2&#39;de onaylı repo checkout&#39;unu kullanabilirsin.
+Repo hazır değilse Windows&#39;ta proje kökünden yalnızca gereken dosyaları arşivle.
+<code>EC2_PUBLIC_IPV4</code> ve key pair yolunu kendi değerlerinle değiştir.</p>
+<pre tabindex="0"><code class="language-powershell">Set-Location &#39;C:\Projects\se4458\ai-billing-support-assistant&#39;
+$archive = Join-Path ([System.IO.Path]::GetTempPath()) &#39;se4458-app.tar.gz&#39;
+$sshKey = &#39;C:\PATH\TO\se4458.pem&#39;
+$server = &#39;ubuntu@EC2_PUBLIC_IPV4&#39;
+tar.exe -czf $archive --exclude=__pycache__ --exclude=&#39;*.pyc&#39; --exclude=&#39;.env*&#39; --exclude=&#39;*.pem&#39; agent billing_api mcp_server requirements.txt compose.yaml
+if ($LASTEXITCODE -ne 0) { throw &#39;Arşiv oluşturulamadı.&#39; }
+tar.exe -tzf $archive
+scp.exe -i $sshKey $archive &quot;${server}:~/se4458-app.tar.gz&quot;
+ssh.exe -i $sshKey $server
+</code></pre>
+<p>EC2 üzerinde Docker Engine ve Compose plugin&#39;i <a href="https://docs.docker.com/engine/install/ubuntu/">Docker&#39;ın Ubuntu/arm64
+adımlarıyla</a> kur.
+Aşağıdaki Linux komutları EC2&#39;de çalışır.</p>
+<pre tabindex="0"><code class="language-bash">mkdir -p &quot;$HOME/se4458&quot;
+tar -xzf &quot;$HOME/se4458-app.tar.gz&quot; -C &quot;$HOME/se4458&quot;
+cd &quot;$HOME/se4458&quot;
+
+sudo apt update
+sudo apt install -y python3-venv
+sudo systemctl enable --now docker
+uname -m
+sudo docker compose version
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -c &#39;import fastapi, mcp, openai, psycopg, uvicorn&#39;
+</code></pre>
+<p>PostgreSQL&#39;i önce kendi başına başlat. Proje kökünde ilk kurulumda Docker
+Compose için bir DB parolası üret. Blok mevcut <strong>.env</strong> dosyasını korur.
+AWS Compose override, container&#39;ın Docker yeniden başlayınca da
+başlatılmasını sağlar. Mevcut Compose named volume veriyi EBS üzerinde
+tutar. Init SQL dosyaları boş volume&#39;un ilk açılışında çalışır.</p>
+<pre tabindex="0"><code class="language-bash">cd &quot;$HOME/se4458&quot;
+
+if [ ! -e .env ]; then
+  (
+    umask 077
+    pg_secret=&quot;$(openssl rand -hex 24)&quot; &amp;&amp;
+      printf &#39;POSTGRES_PASSWORD=%s\n&#39; &quot;$pg_secret&quot; &gt; .env
+  )
+fi
+
+if [ ! -e compose.aws.yaml ]; then
+  cat &gt; compose.aws.yaml &lt;&lt;&#39;YAML&#39;
+services:
+  postgres:
+    restart: unless-stopped
+YAML
+fi
+</code></pre>
+<pre tabindex="0"><code class="language-bash">sudo docker compose -f compose.yaml -f compose.aws.yaml up -d --wait postgres
+sudo docker compose -f compose.yaml -f compose.aws.yaml ps postgres
+</code></pre>
+<pre tabindex="0"><code class="language-bash">sudo docker compose -f compose.yaml -f compose.aws.yaml exec -T postgres \
+  psql -U billing -d billing_dev --set=ON_ERROR_STOP=1 \
+  -c &quot;SELECT subscriber_no, bill_year, bill_month, paid_cents FROM bills WHERE subscriber_no=&#39;A001&#39; AND bill_year=2026 AND bill_month=10;&quot;
+</code></pre>
+<p>Yeni veritabanında <strong>A001 / 2026 / 10 / paid_cents 0</strong> beklenir.
+Aynı volume&#39;u yeniden kullandığında init SQL&#39;leri tekrar çalışmaz.</p>
+<p>PostgreSQL doğrulandıktan sonra uygulama ayarlarını oluştur.
+Aşağıdaki blok DB bağlantı parolasını daha önce oluşturulan <strong>.env</strong>
+dosyasından okur. Chat ve Billing için aynı JWT anahtarını üretir.
+Demo parolasını ve OpenAI anahtarını gizli terminal girişiyle alır.
+Yeniden deploy sırasında mevcut ayar dosyalarını koru.</p>
+<pre tabindex="0"><code class="language-bash">(
+  set -eu
+  umask 077
+  mkdir -p &quot;$HOME/.config/se4458&quot;
+  for file in &quot;$HOME/.config/se4458/&quot;{billing,chat,mcp}.env; do
+    if [ -e &quot;$file&quot; ]; then printf &#39;Mevcut ayar: %s\n&#39; &quot;$file&quot;; exit 1; fi
+  done
+  jwt_secret=&quot;$(openssl rand -hex 32)&quot;
+  read -rsp &#39;A001 demo password (24+ letters and digits): &#39; demo_secret
+  printf &#39;\n&#39;
+  [[ &quot;$demo_secret&quot; =~ ^[a-zA-Z0-9]{24,128}$ ]] || { printf &#39;A001 password format is invalid.\n&#39; &gt;&amp;2; exit 1; }
+  read -rsp &#39;OpenAI project key: &#39; openai_secret
+  printf &#39;\n&#39;
+  [[ &quot;$openai_secret&quot; =~ ^sk-[a-zA-Z0-9_-]+$ ]] || { printf &#39;OpenAI key format is invalid.\n&#39; &gt;&amp;2; exit 1; }
+
+  db_url=&quot;$(.venv/bin/python - &lt;&lt;&#39;PY&#39;
+from urllib.parse import quote
+from dotenv import dotenv_values
+
+password = dotenv_values(&quot;.env&quot;).get(&quot;POSTGRES_PASSWORD&quot;)
+if not password:
+    raise SystemExit(&quot;POSTGRES_PASSWORD is missing from .env&quot;)
+print(f&quot;postgresql://billing:{quote(password, safe=&#39;&#39;)}@127.0.0.1:55458/billing_dev&quot;)
+PY
+)&quot;
+  printf &#39;APP_MODULE=billing_api.main:app\nAPP_HOST=0.0.0.0\nAPP_PORT=8000\nBILLING_DATABASE_URL=%s\nBILLING_JWT_SECRET=%s\n&#39; \
+    &quot;$db_url&quot; &quot;$jwt_secret&quot; &gt; &quot;$HOME/.config/se4458/billing.env&quot;
+  printf &#39;APP_MODULE=agent.chat_api:app\nAPP_HOST=0.0.0.0\nAPP_PORT=8002\nBILLING_DATABASE_URL=%s\nBILLING_JWT_SECRET=%s\nDEMO_LOGIN_PASSWORD=%s\nOPENAI_API_KEY=%s\nBILLING_API_BASE_URL=https://gateway-pending.invalid\nMCP_URL=http://127.0.0.1:8001/mcp\n&#39; \
+    &quot;$db_url&quot; &quot;$jwt_secret&quot; &quot;$demo_secret&quot; &quot;$openai_secret&quot; &gt; &quot;$HOME/.config/se4458/chat.env&quot;
+  printf &#39;APP_MODULE=mcp_server.server:app\nAPP_HOST=127.0.0.1\nAPP_PORT=8001\n&#39; \
+    &gt; &quot;$HOME/.config/se4458/mcp.env&quot;
+)
+</code></pre>
+<p>Operatör akışını canlıda göstereceksen operatörü bu AWS demo DB&#39;de oluştur.
+Komut, operator parolasını etkileşimli ister.</p>
+<pre tabindex="0"><code class="language-bash">(
+  set -a
+  . &quot;$HOME/.config/se4458/billing.env&quot;
+  set +a
+  .venv/bin/python -m agent.operator_accounts operator
+)
+</code></pre>
+<h3>3. Üç süreci systemd ile çalıştır</h3>
+<p>Örnek Ubuntu&#39;nun <code>ubuntu</code> kullanıcısını ve <code>/home/ubuntu/se4458</code> yolunu
+kullanır. Farklı kullanıcı seçersen dosyadaki bu değerleri birlikte değiştir.
+Üç servisin ayrı logu var. Chat tek worker çalışır. Restart olursa bekleyen
+ödeme ve operatör onayları düşer, kullanıcı yeni taslak açabilir.</p>
+<pre tabindex="0"><code class="language-bash">sudo tee /etc/systemd/system/se4458@.service &gt;/dev/null &lt;&lt;&#39;UNIT&#39;
+[Unit]
+Description=SE4458 %i
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/se4458
+EnvironmentFile=/home/ubuntu/.config/se4458/%i.env
+ExecStart=/home/ubuntu/se4458/.venv/bin/python -m uvicorn ${APP_MODULE} --host ${APP_HOST} --port ${APP_PORT} --workers 1
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now se4458@billing se4458@mcp se4458@chat
+systemctl is-active se4458@billing se4458@mcp se4458@chat
+curl -fsS http://127.0.0.1:8000/
+curl -fsS http://127.0.0.1:8002/ -o /dev/null
+curl -fsS &#39;http://127.0.0.1:8000/api/v1/subscribers/A001/bills/2026/10&#39;
+</code></pre>
+<p>Üç <code>active</code>, Billing kökünden JSON ve yeni volume&#39;da faturadan <code>total: 80.00</code>
+beklenir. Chat başlangıçta Gateway yer tutucusunu kullanır. Bir fatura sorusu
+denemeden önce gerçek Invoke URL&#39;yi aşağıdaki adımda gir.</p>
+<h3>4. Gateway ve private integration</h3>
+<ol>
+<li>Cloud Map&#39;te <code>se4458</code> adlı <strong>HTTP namespace</strong> oluştur.
+<strong>Instance discovery</strong> alanında <strong>API calls</strong> seç. İki service oluştur
+(<code>billing</code> ve <code>chat</code>). Her birinde <strong>Register service instance → IP address</strong>
+seçip EC2 private IPv4 ve sırasıyla <code>8000</code> / <code>8002</code> gir. DNS veya health check
+bu tek instance demo için gerekli değil. <strong>EC2 instance</strong> kayıt türü yerine
+IP address alanı portu da kaydeder. Register işleminin tamamlandığını kontrol et.</li>
+<li>API Gateway&#39;de <code>se4458-link</code> adlı <strong>VPC Link V2</strong> oluştur. EC2 ile aynı
+VPC&#39;nin desteklenen AZ&#39;lerindeki subnet&#39;leri ve <code>billing-link</code> SG&#39;yi seç.
+Link <code>AVAILABLE</code> olana kadar bekle. VPC Link&#39;in subnet ve SG seçimi sonradan
+değişmez.</li>
+<li>API Gateway&#39;de <strong>HTTP API</strong> oluştur. <code>$default</code> stage ve <strong>Auto-deploy</strong>
+kullan. Bu sayede canlı URL&#39;ye stage prefix eklenmez ve Chat&#39;in
+<code>/chat-assets</code> ile <code>/api/v1</code> istekleri aynı origin&#39;de çalışır.</li>
+<li>İki <strong>private resource</strong> integration oluştur. Türü <strong>HTTP proxy</strong>, hedefi
+ilgili Cloud Map service ARN, VPC Link&#39;i <code>se4458-link</code>, integration method&#39;u
+<code>ANY</code>, payload format version <code>1.0</code>. Her integration&#39;da path mapping&#39;i
+<code>overwrite:path = $request.path</code> ile ayarla. Console&#39;da <strong>Manage integrations</strong>
+altında hedef integration için <strong>Parameter mapping</strong> alanını kullan.
+Varsayılan HTTP API timeout değeri 30 saniyeyi aşamaz.</li>
+<li>Aşağıdaki route&#39;ları ilgili integration&#39;a bağla. App&#39;in HS256 token&#39;ı için
+Gateway route authorization <code>NONE</code> kalır. Uygulamalar gelen
+<code>Authorization: Bearer ...</code> header&#39;ını doğrular. API Gateway&#39;in hazır JWT
+authorizer&#39;ı RSA tabanlı token bekler. Bu projede korumayı FastAPI uygular.
+Tarayıcı ve API aynı URL&#39;yi kullandığından CORS ayarı gerekmiyor.</li>
+<li>Stage <strong>Logging</strong> ayarına kısa saklama süreli bir CloudWatch log group
+ekleyebilirsin. Access log için örnek format aşağıda. Authorization header,
+body, token veya parola kaydetme. Stage <strong>Throttling</strong> bölümünde demo
+trafiğine uygun bir limit seçebilirsin. Login için örnek başlangıç
+<code>2 requests/s, burst 5</code>. Bu yaklaşık ve paylaşılan bir route limitidir.</li>
+<li>Stage&#39;deki <strong>Invoke URL</strong>&#39;yi kopyala. EC2 üzerindeki
+<code>~/.config/se4458/chat.env</code> içinde <code>BILLING_API_BASE_URL</code> değerini bu
+HTTPS URL ile değiştir ve <code>sudo systemctl restart se4458@chat</code> çalıştır.</li>
+</ol>
+<pre tabindex="0"><code class="language-json">{&quot;requestId&quot;:&quot;$context.requestId&quot;,&quot;routeKey&quot;:&quot;$context.routeKey&quot;,&quot;status&quot;:&quot;$context.status&quot;,&quot;integrationStatus&quot;:&quot;$context.integration.status&quot;,&quot;integrationLatency&quot;:&quot;$context.integration.latency&quot;}
+</code></pre>
+<p>Console Cloud Map hedefini sunmazsa aşağıdaki komutu AWS CloudShell Bash&#39;te
+her hedef için bir kez çalıştır. Aynı Region açık olmalı. Değerler API ID,
+VPC Link ID ve ilgili Cloud Map <strong>service ARN</strong>&#39;i. Dönen Integration ID&#39;yi
+Console&#39;daki route&#39;a bağla.</p>
+<pre tabindex="0"><code class="language-bash">read -rp &#39;HTTP API ID: &#39; gw_api_id
+read -rp &#39;VPC Link ID: &#39; gw_link_id
+read -rp &#39;Cloud Map service ARN: &#39; gw_service_arn
+aws apigatewayv2 create-integration --api-id &quot;$gw_api_id&quot; \
+  --integration-type HTTP_PROXY --integration-method ANY \
+  --connection-type VPC_LINK --connection-id &quot;$gw_link_id&quot; \
+  --integration-uri &quot;$gw_service_arn&quot; --payload-format-version 1.0 \
+  --request-parameters &#39;{&quot;overwrite:path&quot;:&quot;$request.path&quot;}&#39; \
+  --timeout-in-millis 30000 --query IntegrationId --output text
+</code></pre>
+<h4>Route eşlemeleri</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Gateway path</th>
+<th>Integration</th>
+<th>Uygulama kontrolü</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>Chat</td>
+<td>Login/Chat HTML</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/chat-assets/{proxy+}</code></td>
+<td>Chat</td>
+<td>CSS ve JS</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Chat</td>
+<td>Demo/operatör giriş bilgileri</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/chat</code></td>
+<td>Chat</td>
+<td>Abone JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/chat/payments/confirm</code></td>
+<td>Chat</td>
+<td>Abone JWT, açık onay ve taslak sahibi</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/operator/operations/prepare</code></td>
+<td>Chat</td>
+<td>Operatör JWT ve <code>billing:write</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/operator/operations/confirm</code></td>
+<td>Chat</td>
+<td>Operatör JWT, <code>billing:write</code> ve taslak onayı</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/subscribers/{subscriber_no}/bills/{year}/{month}</code></td>
+<td>Billing</td>
+<td>Sahip JWT veya public olarak işaretlenmiş sentetik özet</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/subscribers/{subscriber_no}/bills/{year}/{month}/details</code></td>
+<td>Billing</td>
+<td>Fatura sahibi JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/subscribers/{subscriber_no}/bills/{year}/{month}/payments</code></td>
+<td>Billing</td>
+<td>Fatura sahibi JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/usage</code></td>
+<td>Billing</td>
+<td><code>billing:write</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/bills/calculate</code></td>
+<td>Billing</td>
+<td><code>billing:write</code></td>
+</tr>
+</tbody></table>
+<p>Billing GET <code>/</code> EC2 içi tanılama için kullanılır. Gateway GET <code>/</code> Chat UI&#39;ı
+açar. MCP <code>/mcp</code> ve PostgreSQL yalnız loopback üzerindedir. Proje API sözleşmeleri
+<a href="openapi/billing.openapi.json">Billing OpenAPI</a> ve
+<a href="openapi/chat.openapi.json">Chat OpenAPI</a> dosyalarındadır.</p>
+<h3>5. Canlı kabul ve teslim kanıtları</h3>
+<h4>İlk iki Gateway route&#39;u ve auth</h4>
+<p>Tarayıcıda Invoke URL&#39;yi aç. Login ekranı, CSS ve JS yüklenmeli. Windows
+PowerShell&#39;de Invoke URL&#39;yi gerçek HTTPS değerine çevirip aşağıdaki bloğu
+çalıştır. <code>curl.exe</code> status kodunu gösterir ve login token&#39;ı process belleğinde tutulur.</p>
+<pre tabindex="0"><code class="language-powershell">$gw = &#39;https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com&#39;
+$billPath = &#39;/api/v1/subscribers/A001/bills/2026/10&#39;
+$detailsUrl = &quot;$gw$billPath/details?page=2&amp;pageSize=1&quot;
+curl.exe -sS -o NUL -w &quot;summary HTTP %{http_code}\n&quot; &quot;$gw$billPath&quot;
+curl.exe -sS -o NUL -w &quot;no JWT HTTP %{http_code}\n&quot; $detailsUrl
+
+$demoSecret = Read-Host &#39;A001 demo password&#39; -AsSecureString
+$credential = [pscredential]::new(&#39;A001&#39;, $demoSecret)
+$loginBody = @{username = &#39;A001&#39;; password = $credential.GetNetworkCredential().Password} | ConvertTo-Json -Compress
+try {
+    $session = Invoke-RestMethod -Method Post -Uri &quot;$gw/api/v1/auth/login&quot; -ContentType &#39;application/json&#39; -Body $loginBody -ErrorAction Stop
+    $auth = @{Authorization = &quot;Bearer $($session.token)&quot;}
+    $details = Invoke-WebRequest -UseBasicParsing -Uri $detailsUrl -Headers $auth -ErrorAction Stop
+    &quot;owner JWT HTTP $($details.StatusCode)&quot;
+    $details.Content | ConvertFrom-Json | Select-Object total, remainingBalance, page, pageSize, totalItems
+} finally {
+    Remove-Variable loginBody, credential, demoSecret, session, auth -ErrorAction SilentlyContinue
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Kontrol</th>
+<th>Beklenen sonuç</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Gateway özet, token yok</td>
+<td><code>200</code> ve sentetik A001 toplamı <code>80.00</code></td>
+</tr>
+<tr>
+<td>Gateway korumalı detay, token yok</td>
+<td><code>401</code></td>
+</tr>
+<tr>
+<td>Gateway korumalı detay, A001 JWT</td>
+<td><code>200</code>, <code>page=2</code>, <code>pageSize=1</code>, <code>totalItems=2</code></td>
+</tr>
+<tr>
+<td>Aynı detay, değiştirilmiş token</td>
+<td><code>401</code></td>
+</tr>
+<tr>
+<td>A001 token ile farklı abonenin detay yolu</td>
+<td><code>403</code></td>
+</tr>
+</tbody></table>
+<h4>Chat ve ödeme</h4>
+<table>
+<thead>
+<tr>
+<th>Kullanıcı sorusu veya eylemi</th>
+<th>Kanıt</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>20 GB paketimi 1 GB geçersem ek ücret ne kadar?</code></td>
+<td>MCP araması <code>3.2</code>, <code>$10</code> ek ücret</td>
+</tr>
+<tr>
+<td><code>Ekim 2026 faturam kaç dolar?</code></td>
+<td>Billing REST, kayıtlı <code>$80</code> toplam</td>
+</tr>
+<tr>
+<td><code>Ekim 2026 internet ücretim neden $70?</code></td>
+<td>REST&#39;ten <code>35 GB</code>, MCP&#39;den blok kuralı, <code>$50 + $20</code></td>
+</tr>
+<tr>
+<td><code>Ekim 2026 faturama $20 öde.</code></td>
+<td>Yeni seed varsa onay önce <code>$80</code>. Onay butonuna bastıktan sonra <code>$60</code>. Chat confirm ve Billing payment istekleri Gateway logunda görünür.</td>
+</tr>
+<tr>
+<td>Aynı confirmation ID&#39;nin yeniden gönderilmesi</td>
+<td><code>409</code> ve bakiye değişmez.</td>
+</tr>
+<tr>
+<td>MCP&#39;de ek internet, kısmi ödeme, kısıtlama</td>
+<td>Üç farklı retrieval için <code>3.2</code>, <code>5.1</code>, <code>6.3</code>. Yeniden üretim adımları <a href="../README.md#mcp-billing-guide">README</a> ve <a href="LOCAL_DEMO_EVIDENCE.md">kayıtlı yerel kanıt</a> içinde.</td>
+</tr>
+</tbody></table>
+<p>Üç Chat sorusunda Gateway latency&#39;yi ölç. Birleşik akışta API Gateway HTTP
+API&#39;nin maksimum integration timeout&#39;u 30 saniye. Canlı çağrı bu süreyi
+aşarsa <code>504</code> için Gateway ve Chat loglarını karşılaştır. Ödeme onayı sırasında
+<code>504</code> alırsan tekrar onay göndermeden önce fatura bakiyesini kontrol et.
+Tekrarlayan Chat timeout&#39;ları varsa latency&#39;yi ölçüp alternatif tasarımı
+değerlendir. Bu durum canlı kabulü açık bırakır.</p>
+<pre tabindex="0"><code class="language-bash">sudo journalctl -u se4458@chat -u se4458@billing -u se4458@mcp -n 80 --no-pager
+</code></pre>
+<p><strong>README teslim kaydı:</strong> Canlı HTTPS Invoke URL, route eşlemeleri, deploy
+adımları, A001 test verisi ve test komutu, üç Agent senaryosu, üç MCP sorgusu,
+korumalı Gateway route için başarı/hata ve simüle ödeme kanıtı. A001 demo parolasını hocayla dersin izin verdiği özel kanaldan paylaş. Ekran kaydı
+öncesinde Authorization header, AWS account ID, OpenAI anahtarı ve parola
+görünen alanları kapat. Canlı doğrulama çıktısını yerel kanıttan ayrı kaydet.</p>
+<h3>6. Maliyeti ve kapanışı kontrol et</h3>
+<p>Oluşturmadan önce seçili Region fiyatını, AWS kredini ve kredi bitişini kontrol
+et. EC2 çalışma saati, gp3 EBS, public IPv4, Gateway istekleri, Cloud Map
+kayıtları/lookup&#39;ları ve varsa CloudWatch Logs maliyet kalemleri. OpenAI ayrı
+faturalanır. AWS Budgets&#39;ta cost budget ve e-posta uyarısı ayarlanabilir.
+Uyarı sabit harcama limiti değildir. EC2 Stop, compute ücretini keser ancak
+kalan EBS ve tutulan diğer ücretli kaynakları Billing&#39;de ayrıca kontrol et.
+Hoca URL&#39;ye erişmeyi bitirene kadar demo kaynaklarının aktif kalacağı süreyi
+netleştir. Sonrasında önce gerekli kanıtı ve saklamak istediğin veriyi al.
+AWS envanterinde EC2, EBS/snapshot, Gateway/stage, VPC Link, CloudWatch ve
+Cloud Map kayıtlarını tek tek gözden geçir. Silme işlemleri canlı ders erişimini etkiler.</p>
+<h4>Resmi kaynaklar</h4>
+<ul>
+<li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-private.html">AWS HTTP API private integrations</a></li>
+<li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-vpc-links-v2.html">VPC Link V2 ve Region/AZ desteği</a></li>
+<li><a href="https://docs.aws.amazon.com/cloud-map/latest/dg/creating-namespaces.html">Cloud Map namespace</a> ve <a href="https://docs.aws.amazon.com/cloud-map/latest/dg/registering-instances.html">IP/port kaydı</a></li>
+<li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-parameter-mapping.html">Gateway parameter mapping</a>, <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html">JWT authorizer</a>, <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html">timeout sınırı</a></li>
+<li><a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/how-ec2-instance-stop-start-works.html">EBS ve EC2 stop/start</a> ve <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configure-root-volume-delete-on-termination.html">terminate sırasında root volume</a></li>
+<li><a href="https://calculator.aws/">AWS Pricing Calculator</a>, <a href="https://aws.amazon.com/cloud-map/pricing/">Cloud Map fiyatı</a> ve <a href="https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html">AWS Budgets</a></li>
+</ul>
+    </div>
+  </section>
+  <footer>Kaynaklar ve komutlar <a href="#teknik-plan">teknik planda</a>. <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-private.html">AWS private integration</a> · <a href="https://docs.aws.amazon.com/cloud-map/latest/dg/registering-instances.html">Cloud Map IP/port kaydı</a> · <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html">HTTP API limitleri</a>.</footer>
+</main>
+<script>
+const scenarios = {
+  chat: {
+    title: "Chat açılışı",
+    explanation: "Tarayıcı → Gateway → Chat. HTML ve /chat-assets aynı HTTPS origin üzerinden gelir.",
+    nodes: ["browser", "gateway", "chat"]
+  },
+  rest: {
+    title: "REST tool",
+    explanation: "Tarayıcı → Gateway → Chat. Model tool ister, Agent Gateway’e geri gidip Billing’in kayıtlı fatura sonucunu alır.",
+    nodes: ["browser", "gateway", "chat", "billing", "db", "llm"]
+  },
+  mcp: {
+    title: "MCP tool",
+    explanation: "Chat soruyu OpenAI’ya gönderir. Agent modelin arama isteğini aynı EC2’deki MCP Server’a iletir. Rehber alıntısı modele döner.",
+    nodes: ["browser", "gateway", "chat", "mcp", "llm"]
+  },
+  payment: {
+    title: "Ödeme onayı",
+    explanation: "Tarayıcıdaki buton Gateway üzerinden Chat onayına gider. Chat, aynı Gateway üzerinden Billing’e ödeme isteği gönderir. Billing bakiye ve simüle ödeme kaydını yazar.",
+    nodes: ["browser", "gateway", "chat", "billing", "db"]
+  }
+};
+const trace = document.querySelector("#trace");
+const buttons = document.querySelectorAll("[data-scene]");
+const nodes = document.querySelectorAll("[data-node]");
+for (const button of buttons) {
+  button.addEventListener("click", () => {
+    const scene = scenarios[button.dataset.scene];
+    for (const item of buttons) item.setAttribute("aria-pressed", String(item === button));
+    for (const node of nodes) node.classList.toggle("active", scene.nodes.includes(node.dataset.node));
+    trace.querySelector("strong").textContent = scene.title;
+    trace.querySelector("span").textContent = scene.explanation;
+  });
+}
+</script>
+</body>
+</html>

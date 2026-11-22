@@ -1,0 +1,27 @@
+name: se4458-billing
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: billing_dev
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:55458:5432"
+    volumes:
+      - billing-data:/var/lib/postgresql/data
+      - ./billing_api/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./billing_api/db/demo.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
+      - ./billing_api/db/usage.sql:/docker-entrypoint-initdb.d/03-usage.sql:ro
+      - ./billing_api/db/payments.sql:/docker-entrypoint-initdb.d/04-payments.sql:ro
+      - ./billing_api/db/demo_public.sql:/docker-entrypoint-initdb.d/05-demo-public.sql:ro
+      - ./billing_api/db/operator_accounts.sql:/docker-entrypoint-initdb.d/06-operator-accounts.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U billing -d billing_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  billing-data:

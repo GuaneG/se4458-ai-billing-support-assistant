@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fatura Destek</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/chat-assets/chat.css?v=3">
+    <script defer src="/chat-assets/chat.js?v=3"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="bar-content">
+        <div class="brand"><span class="mark" aria-hidden="true"></span>Fatura Destek</div>
+        <div class="session-controls">
+          <span class="demo" id="mode-badge" hidden><span aria-hidden="true"></span><strong id="model-mode">Yerel demo</strong></span>
+          <button type="button" id="logout" hidden>Çıkış yap</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="login-view" class="login-layout">
+      <section class="login-card" aria-labelledby="login-title">
+        <h1 id="login-title">Demo girişi</h1>
+        <p>Abone veya operatör hesabınla giriş yap.</p>
+        <form id="login-form">
+          <label for="login-username">Kullanıcı adı</label>
+          <input id="login-username" name="username" placeholder="A001" autocomplete="username" required>
+          <label for="login-password">Şifre</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+          <button id="login-button" type="submit">Giriş yap</button>
+          <p id="login-status" class="status" role="status"></p>
+        </form>
+      </section>
+    </main>
+
+    <main id="operator-view" class="operator-layout" hidden>
+      <header class="operator-header">
+        <h1>Operatör işlemleri</h1>
+        <p>Aboneye kullanım ekle veya seçilen dönemin faturasını hesapla.</p>
+      </header>
+      <div class="operator-grid">
+        <form id="operator-form" class="operator-card">
+          <fieldset id="operator-fields">
+            <label for="operator-kind">İşlem</label>
+            <select id="operator-kind" name="kind">
+              <option value="add_usage">Kullanım ekle (Add Usage)</option>
+              <option value="calculate_bill">Fatura hesapla (Calculate Bill)</option>
+            </select>
+
+            <label for="operator-subscriber">Abone numarası</label>
+            <input id="operator-subscriber" name="subscriberNo" placeholder="A001" required>
+
+            <div class="operator-period">
+              <div>
+                <label for="operator-year">Yıl</label>
+                <input id="operator-year" name="year" type="number" min="1" max="9999" placeholder="2026" required>
+              </div>
+              <div>
+                <label for="operator-month">Ay</label>
+                <input id="operator-month" name="month" type="number" min="1" max="12" placeholder="12" required>
+              </div>
+            </div>
+
+            <div id="usage-fields">
+              <label for="operator-usage-type">Kullanım türü</label>
+              <select id="operator-usage-type" name="usageType">
+                <option value="Phone">Telefon (+10 dakika)</option>
+                <option value="Internet">İnternet (+1 MB)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="operator-primary">İşlemi hazırla</button>
+          </fieldset>
+          <p id="operator-form-status" class="status" role="status"></p>
+        </form>
+
+        <section id="operator-preview" class="operator-card operator-preview" aria-labelledby="operator-preview-title" hidden>
+          <h2 id="operator-preview-title">İşlem onayı</h2>
+          <p id="operator-preview-summary"></p>
+          <button id="operator-confirm" type="button" class="operator-primary">Onayla ve uygula</button>
+          <p id="operator-result" class="status" role="status">Onay 5 dakika geçerli.</p>
+        </section>
+      </div>
+    </main>
+
+    <main id="chat-view" class="workspace" hidden>
+      <section class="conversation" aria-labelledby="chat-title">
+        <div class="intro">
+          <h1 id="chat-title">Fatura asistanı</h1>
+          <p id="mode-info">Fatura tutarını, internet kullanımını veya ek paket ücretini sor.</p>
+          <div class="examples" id="examples" aria-label="Örnek sorular"></div>
+        </div>
+
+        <div id="messages" class="messages" role="log" aria-label="Sohbet"></div>
+
+        <form id="chat-form" class="composer">
+          <label class="visually-hidden" for="question">Sorun</label>
+          <div class="input-row">
+            <input id="question" name="question" type="text" placeholder="Faturanla ilgili bir soru yaz" required>
+            <button id="send" type="submit" disabled>Gönder</button>
+          </div>
+          <p id="status" class="status" role="status"></p>
+        </form>
+      </section>
+
+      <aside class="trace" aria-labelledby="trace-title">
+        <header class="trace-header">
+          <h2 id="trace-title">Agent akışı</h2>
+          <p>Son sorunun adımları</p>
+          <div class="trace-views" role="group" aria-label="Akış görünümü">
+            <button type="button" aria-pressed="true" aria-controls="trace-content">Tool trace</button>
+            <button type="button" aria-pressed="false" aria-controls="dialogue-content">Agent ↔ LLM</button>
+          </div>
+        </header>
+        <div id="trace-content" aria-live="polite">
+          <p class="trace-empty">Bir soru gönderdiğinde çağrılar ve sonuçları burada görünecek.</p>
+        </div>
+        <div id="dialogue-content" aria-live="polite" hidden>
+          <p class="trace-empty">Bir soru gönderdiğinde Agent ile LLM arasındaki mesajları burada göreceksin.</p>
+        </div>
+      </aside>
+    </main>
+  </body>
+</html>
