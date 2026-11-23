@@ -24,13 +24,16 @@ repository root to reproduce this sequence.
 
 | Capture | Observed |
 | --- | --- |
+| [MCP-only Chat](evidence/aws-chat-mcp-only.png) | The live Agent calls only `search_billing_documentation` for a 1 GB overage. The tool returns the policy for a started 10 GB block, and the answer reports a USD 10.00 surcharge. |
 | [REST-only Chat](evidence/aws-chat-rest-only.png) | The Agent calls `query_bill` and reports the October total of USD 80.00. |
 | [REST plus MCP Chat](evidence/aws-chat-rest-and-mcp.png) | The Agent calls `query_bill_details` and `search_billing_documentation`. It reports 35 GB usage, 15 GB overage and a USD 70.00 internet charge supported by sections 3.1 and 3.2. |
 | [Confirmed simulated payment](evidence/aws-payment-confirmed.png) | The Chat prepares a USD 20.00 draft and shows the confirmed payment and USD 60.00 outstanding balance after the button is clicked. The read-only summary check independently shows the updated balance. |
 
-The [local MCP-only Agent trace and three distinct retrieval examples](LOCAL_DEMO_EVIDENCE.md)
-are recorded separately. A standalone **live MCP-only Chat capture** remains
-to be collected for the demo video.
+The MCP-only capture is from the demo video at 3:15. The live answer uses
+“1 GB block” in one sentence. The overage is 1 GB, and the retrieved policy
+correctly specifies a 10 GB billing block. The
+[local MCP-only trace and three distinct retrieval examples](LOCAL_DEMO_EVIDENCE.md)
+show the policy in detail.
 
 ## Operator check
 

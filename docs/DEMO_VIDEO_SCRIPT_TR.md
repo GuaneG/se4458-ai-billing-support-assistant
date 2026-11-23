@@ -1,7 +1,8 @@
 # SE4458 Grup 2 demo videosu
 
 **Proje** AI Billing Support Assistant  
-**Hedef süre** Yaklaşık 6 dakika  
+**Hedef süre** Yaklaşık 6,5 dakika
+
 **Kayıt sırası** Mimari → Gateway ve yetki → üç Chat senaryosu → simüle ödeme → testler ve teslim dosyaları
 
 Konuşma metnini olduğu gibi okuyabilir veya kendi cümlelerinle anlatabilirsin. Zamanlar yaklaşık. Yanıt beklenen kısımları kurguda kısaltabilirsin.
@@ -9,25 +10,37 @@ Konuşma metnini olduğu gibi okuyabilir veya kendi cümlelerinle anlatabilirsin
 ## Kayda girmeden önce
 
 1. Gateway yenilenmiş bir tarayıcı sekmesinde açılsın ve `A001` ile giriş yapılabilsin. Parolayı kayıttan önce gir.
-2. Üç pencereyi hazırla. [Öğrenme rehberi](AWS_OGRENME_REHBERI.html), canlı Chat ve Windows PowerShell. Gateway ve pytest komutlarını Windows PowerShell'de çalıştır. SSH terminalini servis logları veya isteğe bağlı PostgreSQL sorgusu için kullan.
+2. [Öğrenme rehberini](AWS_OGRENME_REHBERI.html), canlı Chat’i ve iki PowerShell oturumunu hazırla. EC2’ye SSH ile bağlı oturumda açılış için servisleri göster. Gateway ve pytest komutlarını bilgisayarındaki PowerShell’de çalıştır.
 3. Ekim faturasının **güncel kalan borcunu** önceden oku. Son doğruladığımız toplam **80 dolar**, ödenen **20 dolar**, kalan **60 dolar** idi. Yeni kayıtta **10 dolarlık** simüle ödeme kullanırsan bu başlangıçla **60 → 50 dolar** beklersin. Ekran farklı bir başlangıç gösterirse o tutar üzerinden anlat. Borç sıfırsa, önceki **80 → 60 dolar** onay kanıtını göster.
 4. Üç MCP sorgusunun ve test çalıştırma talimatının olduğu README bölümünü açık bırak. Token, parola, API key ve secret dosyalarının göründüğü sekmeleri kapat.
 
 ## 0:00–0:40 · Giriş ve mimari
 
-**Ekranda:** Öğrenme rehberinde mimariyi aç. Sırayla tarayıcı, API Gateway, EC2 içindeki Chat/Agent, Billing, MCP ve PostgreSQL’i göster.
+**Ekranda:** Önce EC2’ye SSH ile bağlı olduğun PowerShell terminalinde çalıştır. Üç servisin adı ve çalışma durumu ekranda görünsün. Ardından mimari rehberine geç.
 
-> Merhaba, ben Can. SE4458 Grup 2 midterm projem bir mobil fatura asistanı. Abone faturasını sorgulayabiliyor, tarifesini öğrenebiliyor ve açık onayla simüle ödeme yapabiliyor. Uygulamayı AWS’de tek bir EC2 üzerinde çalıştırdım. Tarayıcı Chat’e API Gateway üzerinden ulaşıyor. Cloud Map, Chat ve Billing’in private IP ve portunu veriyor. Gateway, EC2’ye VPC Link üzerinden bağlanıyor. Agent, tarifeyi aynı EC2’deki MCP’den, kayıtlı fatura verisini ise Gateway üzerinden Billing REST API’den alıyor.
+```bash
+systemctl list-units 'se4458@*.service' --type=service --no-pager
+```
+
+> Merhabalar hocam, ben Can. Grup 2’deydim. Projem bir mobil fatura asistanı. Abone faturasını sorgulayabiliyor, tarifesini öğrenebiliyor ve onay butonuyla deneme amaçlı ödeme yapabiliyor.
+>
+> Uygulama AWS’de tek bir EC2 instance’ında çalışıyor. Burada Chat API, Billing REST API ve MCP Server olmak üzere üç servis var. Verileri de aynı EC2’de bir Docker container’ında çalışan PostgreSQL’de saklıyoruz.
+>
+> Tarayıcı sohbet arayüzünü açmak için API Gateway’e istek gönderiyor. Gateway, Cloud Map’ten Chat API’nin private IP adresini ve portunu bulup VPC Link üzerinden isteği iletiyor. Agent tarife kurallarını aynı EC2’deki MCP Server’dan alıyor. Kayıtlı fatura verisi gerektiğinde ise aynı Gateway’e tekrar istek gönderiyor ve Gateway bu kez Billing REST API’ye yönlendiriyor.
 
 **Ekranda kalması gereken kanıt:** Chat için port **8002**, Billing için **8000**, MCP için **loopback 8001**. Agent’ın Billing isteğinin aynı Gateway’e döndüğünü gösteren hat.
 
 ## 0:40–1:30 · İki route ve korumalı endpoint
 
-**Ekranda:** PowerShell’de aşağıdaki [Gateway kontrolünü](#gateway-kontrolü-için-powershell) çalıştır veya önceden kaydettiğin temiz çıktıyı göster. Aynı Gateway’de fatura özeti ve fatura detayı route’larını belirt.
+**Ekranda:** İstersen önce [PowerShell scriptini](../scripts/demo-gateway-check.ps1) açıp üstteki özet ve detay URL’lerini göster. Ardından [Gateway kontrolünü](#gateway-kontrolü-için-powershell) çalıştır. Özet ve detay çıktılarındaki alanları karşılaştır.
 
-> İki versioned route örneği göstereceğim. İlk route, demo verisi olarak işaretlenen Ekim özeti için token olmadan 200 dönüyor. İkinci route fatura detayı. Aynı Gateway URL’sinde detay JWT’siz çağrıldığında 401, abonenin kendi JWT’siyle çağrıldığında 200 dönüyor. İstekte ikinci sayfayı ve sayfa başına bir kalemi istedim. Sonuçta page, pageSize ve totalItems alanlarını görebiliyoruz.
+> Hazırladığımız PowerShell scriptiyle API Gateway üzerinden A001 müşterisinin Ekim 2026 faturasını sorguluyorum. İlk istekte özet endpoint’ine JWT göndermiyorum. Bu demo özeti açık olduğu için 200 alıyorum. Yanıtta toplam tutarı, ödenen tutarı, kalan borcu ve ödeme durumunu görüyoruz.
+>
+> Ardından aynı faturanın detayını istiyorum. Detay endpoint’i korumalı olduğu için JWT’siz istek 401 dönüyor. Script A001 olarak giriş yapıp aldığı JWT’yi aynı isteğe ekleyince 200 alıyorum.
+>
+> Detay yanıtında tutarların yanında telefon ve internet kullanımı ile ücret dökümü de geliyor. İkinci sayfayı ve sayfa başına bir ücret kalemini istediğim için iki kalemden yalnızca biri bu yanıtta görünüyor. Burada pagination’ın çalıştığını görüyoruz.
 
-**Ekranda kalması gereken kanıt:** Özet `200`, detay tokensız `401`, detay sahibiyle `200`, `page=2`, `pageSize=1` ve `totalItems=2`. Parola ve token değerleri çıktıdan gizli kalır.
+**Ekranda kalması gereken kanıt:** Özet `200`, detay tokensız `401`, detay sahibiyle `200`. Özet JSON’unda tutarlar ve durum, detay JSON’unda kullanım, `chargeBreakdown`, `page=2`, `pageSize=1`, `totalItems=2` ve `returnedItems=1` görünsün. Parola ve token değerleri çıktıdan gizli kalır.
 
 ## 1:30–3:15 · Üç Chat senaryosu
 
@@ -55,13 +68,34 @@ Her sorudan sonra **Tool trace** kartını aç. Birleşik senaryoda `query_bill_
 
 **Ekranda kalması gereken kanıt:** Aynı ay için **onay öncesi → onay → onay sonrası**. Önceki kaydı kullanırsan, gösterdiğin tutar **80 → 60 dolar** ve ödeme **20 dolar**.
 
-## 4:10–4:35 · Operatör işlemleri
+## 4:10–5:10 · Canlı operatör işlemleri
 
-**Ekranda:** Operatör ekranı veya önceden aldığın Kasım test çıktısı. Add Usage ve Calculate Bill seçeneklerini kısa göster.
+**Ekranda:** Canlı uygulamayı ayrı bir gizli pencerede operatör hesabıyla aç. Kasım 2026’yı kullan. Böylece Ekim fatura ve ödeme örneğini ayrı tutarsın.
 
-> Operatör panelinde iki ayrı işlem var. Add Usage seçilen aya on dakika veya bir megabayt ekliyor. Calculate Bill, biriken kullanımı alıp aynı aya ait faturayı hesaplıyor. Kasım testinde yeni kullanım elli dakikaya çıkmıştı, kayıtlı fatura kırk dakika gösteriyordu. Hesaplamayı onaylayınca faturadaki kullanım da elli dakika oldu. İlk bin dakika pakete dahil olduğu için toplam 50 dolar kaldı.
+1. **Başlangıcı göster.** EC2 terminalinde aşağıdaki sorguyu çalıştır. `current_minutes` birikmiş kullanımı, `billed_minutes` kayıtlı faturadaki kullanımı, `total_usd` fatura toplamını gösterir.
+2. Operatör ekranında **Kullanım ekle (Add Usage)** seç. Abone `A001`, yıl `2026`, ay `11`, kullanım türü **Telefon (+10 dakika)**. **İşlemi hazırla → Onayla ve uygula**. **Kullanım kaydedildi** mesajını göster.
+3. **Aynı sorguyu tekrar çalıştır.** Güncel kullanım 10 dakika artar. Kayıtlı faturadaki dakika ve tutar aynı kalır.
+4. Operatör ekranında **Fatura hesapla (Calculate Bill)** seç. Aynı abone ve dönem için **İşlemi hazırla → Onayla ve uygula**. **Fatura hesaplandı ve kaydedildi** mesajını göster.
+5. **Sorguyu son kez çalıştır.** Faturadaki dakika, güncel kullanımla eşleşir. 60 dakika pakete dahil olduğu için toplam 50 dolar kalır.
 
-## 4:35–5:35 · Üç MCP retrieval ve otomatik testler
+> Başlangıçta hem güncel kullanım hem de faturadaki kullanım elli dakika. On dakika ekleyince güncel kullanım altmışa çıkıyor, faturada hâlâ elli dakika görünüyor. Faturayı yeniden hesapladığımda faturadaki dakika da altmış oluyor. Paket sınırının içinde kaldığımız için toplam elli dolar.
+
+**Beklenen karşılaştırma:** 23 Kasım’da kontrol ettiğimiz başlangıç `50 / 50 / 50.00` idi. Bunun üzerine ilk işlem `60 / 50 / 50.00`, ikincisi `60 / 60 / 50.00` verir. Prova sırasında kullanım eklediysen konuşmayı ekrandaki güncel sayılara göre yap.
+
+**Üç ölçüm için kullanacağın PostgreSQL sorgusu.**
+
+```bash
+cd "$HOME/se4458"
+sudo docker compose -f compose.yaml -f compose.aws.yaml exec -T postgres \
+  psql -U billing -d billing_dev -c "
+    SELECT u.phone_minutes AS current_minutes, b.phone_minutes AS billed_minutes,
+           round((b.phone_charge_cents + b.internet_charge_cents) / 100.0, 2) AS total_usd
+    FROM monthly_usage u
+    LEFT JOIN bills b USING (subscriber_no, bill_year, bill_month)
+    WHERE u.subscriber_no = 'A001' AND u.bill_year = 2026 AND u.bill_month = 11;"
+```
+
+## 5:10–6:10 · Üç MCP retrieval ve otomatik testler
 
 **Ekranda:** [README’deki üç MCP sorgusunu](../README.md#mcp-billing-guide) aç, sonra terminalde MCP testini çalıştır. Üç testin çıktısı ekranda kalırken tam suite komutunu göster.
 
@@ -74,7 +108,7 @@ Her sorudan sonra **Tool trace** kartını aç. Birleşik senaryoda `query_bill_
 
 **Ekranda kalması gereken kanıt:** Üç retrieval testinin sonucu ve tam suite’in gerçek özeti. PostgreSQL test ortamı hazırlanmadıysa `skipped` görünen kontrolleri geçmiş olarak anlatma. Önceki tam PostgreSQL test kanıtı [yerel kanıt dosyasında](LOCAL_DEMO_EVIDENCE.md#protected-route-and-tests).
 
-## 5:35–6:00 · Teslim dosyaları
+## 6:10–6:35 · Teslim dosyaları
 
 **Ekranda:** README ve bağlantıları. OpenAPI, ER diyagramı, MCP tool şeması, deploy/route tablosu, testler ve demo kanıtları.
 

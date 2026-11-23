@@ -87,8 +87,9 @@ The [MCP section](#mcp-billing-guide) includes three distinct retrieval inputs
 and expected passages. The test suite and scripted demo run without an
 OpenAI API key or AWS.
 
-**Demo video** Recording and submission link pending. The
-[recording script](docs/DEMO_VIDEO_SCRIPT_TR.md) includes the narration,
+**Demo video** [SE4458 Midterm Demo](https://github.com/GuaneG/se4458-ai-billing-support-assistant/releases/tag/midterm-demo).
+Open the release and download `SE4458_Demo.mp4` from its Assets section.
+The [recording script](docs/DEMO_VIDEO_SCRIPT_TR.md) includes the narration,
 screen order and verification commands.
 
 ## Local development
