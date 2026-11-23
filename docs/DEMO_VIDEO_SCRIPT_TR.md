@@ -9,7 +9,7 @@ Konuşma metnini olduğu gibi okuyabilir veya kendi cümlelerinle anlatabilirsin
 ## Kayda girmeden önce
 
 1. Gateway yenilenmiş bir tarayıcı sekmesinde açılsın ve `A001` ile giriş yapılabilsin. Parolayı kayıttan önce gir.
-2. Üç pencereyi hazırla. [Öğrenme rehberi](AWS_OGRENME_REHBERI.html), canlı Chat ve PowerShell. PowerShell’de proje kökü, GitHub/IDE’de teslim dosyaları hazır olsun.
+2. Üç pencereyi hazırla. [Öğrenme rehberi](AWS_OGRENME_REHBERI.html), canlı Chat ve Windows PowerShell. Gateway ve pytest komutlarını Windows PowerShell'de çalıştır. SSH terminalini servis logları veya isteğe bağlı PostgreSQL sorgusu için kullan.
 3. Ekim faturasının **güncel kalan borcunu** önceden oku. Son doğruladığımız toplam **80 dolar**, ödenen **20 dolar**, kalan **60 dolar** idi. Yeni kayıtta **10 dolarlık** simüle ödeme kullanırsan bu başlangıçla **60 → 50 dolar** beklersin. Ekran farklı bir başlangıç gösterirse o tutar üzerinden anlat. Borç sıfırsa, önceki **80 → 60 dolar** onay kanıtını göster.
 4. Üç MCP sorgusunun ve test çalıştırma talimatının olduğu README bölümünü açık bırak. Token, parola, API key ve secret dosyalarının göründüğü sekmeleri kapat.
 
@@ -31,7 +31,7 @@ Konuşma metnini olduğu gibi okuyabilir veya kendi cümlelerinle anlatabilirsin
 
 ## 1:30–3:15 · Üç Chat senaryosu
 
-Her sorudan sonra **Tool trace** kartını aç. Hangi tool’un çalıştığı görünsün. Birleşik senaryoda **Agent ↔ LLM** sekmesini kısa süre açıp tool seçimi ile sonucunun modele dönüşünü göster.
+Her sorudan sonra **Tool trace** kartını aç. Birleşik senaryoda `query_bill_details` ve `search_billing_documentation` satırlarını genişletip tool parametrelerini ve dönen sonuçları göster. AWS'de `CHAT_INCLUDE_DIALOGUE=true` açıksa **Agent ↔ LLM** sekmesine geç. Modelin istediği tool ile Agent'ın döndürdüğü sonucu aynı `call_id` üzerinden göster.
 
 | Soru | Ekranda göster | Konuşma metni |
 |---|---|---|
@@ -84,31 +84,11 @@ Bu kapanış metnindeki dosyaları ve canlı URL’yi kayıttan önce README’d
 
 ## Gateway kontrolü için PowerShell
 
-İlk satır çalışınca Gateway’in **Invoke URL** değerini gir. Parola sorusu maskeli. Çıktıda HTTP durumları ve sadece seçilen fatura alanları görünür.
+Proje klasöründen [Gateway kontrol scriptini](../scripts/demo-gateway-check.ps1) çalıştır. Script proje için kullanılan **Invoke URL**’yi otomatik seçer ve maskeli A001 parolasını ister. Çıktıda HTTP durumları, seçilen fatura alanları ve yanıtta kaç ücret kalemi döndüğü görünür.
 
 ```powershell
-$demoGatewayUrl = (Read-Host 'Gateway Invoke URL').TrimEnd('/')
-$demoBillPath = '/api/v1/subscribers/A001/bills/2026/10'
-$demoDetailUrl = "$demoGatewayUrl$demoBillPath/details?page=2&pageSize=1"
-
-curl.exe -sS -o NUL -w "Summary HTTP %{http_code}\n" "$demoGatewayUrl$demoBillPath"
-curl.exe -sS -o NUL -w "Detail without JWT HTTP %{http_code}\n" "$demoDetailUrl"
-
-$demoPassword = Read-Host 'A001 demo parolası' -AsSecureString
-$demoCredential = [pscredential]::new('A001', $demoPassword)
-$demoLoginBody = @{
-    username = 'A001'
-    password = $demoCredential.GetNetworkCredential().Password
-} | ConvertTo-Json -Compress
-try {
-    $demoSession = Invoke-RestMethod -Method Post -Uri "$demoGatewayUrl/api/v1/auth/login" -ContentType 'application/json' -Body $demoLoginBody -ErrorAction Stop
-    $demoHeaders = @{ Authorization = "Bearer $($demoSession.token)" }
-    $demoDetail = Invoke-WebRequest -UseBasicParsing -Uri $demoDetailUrl -Headers $demoHeaders -ErrorAction Stop
-    "Detail with owner JWT HTTP $($demoDetail.StatusCode)"
-    $demoDetail.Content | ConvertFrom-Json | Select-Object total, paidAmount, remainingBalance, page, pageSize, totalItems
-} finally {
-    Remove-Variable demoPassword, demoCredential, demoLoginBody, demoSession, demoHeaders -ErrorAction SilentlyContinue
-}
+Set-Location 'C:\Projects\se4458\ai-billing-support-assistant'
+& '.\scripts\demo-gateway-check.ps1'
 ```
 
 ## Kayıt tamamlandığında

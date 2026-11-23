@@ -78,10 +78,13 @@ def create_app(
     billing_transport: httpx2.AsyncBaseTransport | None = None,
     mcp_transport: httpx2.AsyncBaseTransport | None = None,
     lifespan: Callable[[FastAPI], AbstractAsyncContextManager[None]] | None = None,
-    include_dialogue: bool = False,
+    include_dialogue: bool | None = None,
     demo_password: str | None = None,
     examples: tuple[dict[str, str], ...] = (),
 ) -> FastAPI:
+    if include_dialogue is None:
+        include_dialogue = getenv("CHAT_INCLUDE_DIALOGUE", "").strip().lower() == "true"
+
     app = FastAPI(title="Billing Support Chat", lifespan=lifespan)
     approvals = PaymentApprovals()
     salt = token_bytes(16)

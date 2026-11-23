@@ -29,6 +29,12 @@ The HTTP API uses the `$default` stage. Both private integrations use the
 `se4458-link` VPC Link. Cloud Map resolves `chat` to port 8002 and
 `billing` to port 8000. FastAPI checks the JWT and role on protected routes.
 
+Set `CHAT_INCLUDE_DIALOGUE=true` in the EC2 Chat service's environment
+file and restart `se4458@chat` to show the **Agent ↔ LLM** panel for new
+authenticated Chat requests. The panel shows the question, tool calls,
+tool results and final answer. Omitting the setting or using `false`
+keeps the detailed panel disabled. **Tool trace** is available in either mode.
+
 - [AWS deployment plan, routes and acceptance checks](docs/AWS_DEPLOY_PLAN.md)
 - [Illustrated AWS Console guide (Turkish)](docs/AWS_CONSOLE_GUIDE.html)
 - [Interactive architecture guide (Turkish)](docs/AWS_OGRENME_REHBERI.html)
@@ -67,15 +73,16 @@ The assets method reflects the last console capture. The deploy guide uses
    recorded usage and billing-guide sections 3.1 and 3.2.
 3. Append `/details?page=2&pageSize=1` to the public summary path. With the
    authorization header absent, the live endpoint returns HTTP 401 and
-   `{"detail":"A valid bearer token is required"}`. Use the owner-authenticated
-   check in the [AWS deployment guide](docs/AWS_DEPLOY_PLAN.md)
-   to inspect the response and pagination.
+   `{"detail":"A valid bearer token is required"}`. On Windows PowerShell, run
+   `& '.\scripts\demo-gateway-check.ps1'` from the repository root to verify
+   the public summary, protected detail, and owner-authenticated pagination.
+   The [script](scripts/demo-gateway-check.ps1) prompts for the demo password.
 4. In Chat, request a simulated payment within the current outstanding
    balance and confirm it in the UI. The shown proof records a USD 20.00
    payment and a balance change from USD 80.00 to USD 60.00.
 
 **Automated verification** The [full local run](docs/AWS_LIVE_EVIDENCE.md#automated-verification)
-passed all **54 tests**, including the Docker PostgreSQL integration checks.
+passed all **56 tests**, including the Docker PostgreSQL integration checks.
 The [MCP section](#mcp-billing-guide) includes three distinct retrieval inputs
 and expected passages. The test suite and scripted demo run without an
 OpenAI API key or AWS.

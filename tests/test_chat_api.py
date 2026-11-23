@@ -42,14 +42,26 @@ def test_chat_rejects_requests_without_a_session():
     assert reply.headers["www-authenticate"] == "Bearer"
 
 
-@pytest.mark.parametrize("include_dialogue", [False, True], ids=["default", "with_dialogue"])
+@pytest.mark.parametrize(
+    ("dialogue_setting", "app_options", "expect_dialogue"),
+    [
+        pytest.param(None, {}, False, id="default"),
+        pytest.param("true", {}, True, id="deployment_flag"),
+        pytest.param("false", {"include_dialogue": True}, True, id="local_override"),
+        pytest.param("true", {"include_dialogue": False}, False, id="explicit_disable"),
+    ],
+)
 def test_chat_returns_answer_and_tool_trace_for_authenticated_subscriber(
-    monkeypatch, include_dialogue,
+    monkeypatch, dialogue_setting, app_options, expect_dialogue,
 ):
     from agent.chat_api import create_app
 
     signing_key = "chat-test-only-key-never-for-deployment"
     monkeypatch.setenv("BILLING_JWT_SECRET", signing_key)
+    if dialogue_setting is None:
+        monkeypatch.delenv("CHAT_INCLUDE_DIALOGUE", raising=False)
+    else:
+        monkeypatch.setenv("CHAT_INCLUDE_DIALOGUE", dialogue_setting)
     token = jwt.encode(
         {"sub": "A001", "exp": datetime.now(timezone.utc) + timedelta(minutes=5)},
         signing_key,
@@ -94,7 +106,7 @@ def test_chat_returns_answer_and_tool_trace_for_authenticated_subscriber(
             create_response=model,
             billing_transport=httpx2.ASGITransport(app=billing_app),
             mcp_transport=httpx2.ASGITransport(app=mcp_app),
-            include_dialogue=include_dialogue,
+            **app_options,
         )
         async with (
             mcp_app.router.lifespan_context(mcp_app),
@@ -123,7 +135,7 @@ def test_chat_returns_answer_and_tool_trace_for_authenticated_subscriber(
         )
         assert token not in reply.text
 
-        if include_dialogue:
+        if expect_dialogue:
             dialogue = body["dialogue"]
             assert [step["kind"] for step in dialogue] == [
                 "request", "tool_call", "tool_result", "tool_call", "tool_result", "answer",

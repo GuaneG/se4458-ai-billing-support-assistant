@@ -13,11 +13,12 @@ token. The public summary uses the assignment's synthetic subscriber data.
 | `GET /api/v1/subscribers/A001/bills/2026/10` | HTTP 200. Total USD 80.00, paid USD 20.00, balance USD 60.00. |
 | `GET /api/v1/subscribers/A001/bills/2026/10/details?page=2&pageSize=1` | HTTP 401. Billing returned `{"detail":"A valid bearer token is required"}`. |
 
-The combined live Chat screenshot shows a successful authenticated
-`query_bill_details` call through the Agent. A standalone Gateway detail
-response showing HTTP 200 and the pagination fields remains to be captured
-with the demo subscriber login. The [recording script](DEMO_VIDEO_SCRIPT_TR.md)
-has the command.
+On 23 November 2026, the deployed Gateway returned HTTP 200 for the public
+summary, HTTP 401 for the protected detail without a JWT, and HTTP 200 for
+the same detail with the A001 JWT. The last response returned one charge
+on page 2 with `pageSize=1` and `totalItems=2`. Run the
+[PowerShell demo check](../scripts/demo-gateway-check.ps1) from the
+repository root to reproduce this sequence.
 
 ## Live Agent and payment captures
 
@@ -47,12 +48,12 @@ with separate read and write databases. The write suite used
 
 ```text
 python -B -m pytest -p no:cacheprovider -q -rs --tb=short
-......................................................                   [100%]
-54 passed in 2.86s
+........................................................                   [100%]
+56 passed in 2.89s
 ```
 
 The fast run without the optional PostgreSQL test variables returned
-`51 passed, 3 skipped`. The three skipped cases were included in the
+`53 passed, 3 skipped`. The three skipped cases were included in the
 full PostgreSQL run. See the [test setup](../README.md#local-development).
 
 The focused MCP retrieval run returned `3 passed, 3 deselected` for
